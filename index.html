@@ -164,11 +164,11 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
 
     <!-- Interest mode -->
     <div class="mode-row">
-      <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Auto spread</div>
-      <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual per stack</div>
+      <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Heatmap data</div>
+      <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual override</div>
     </div>
-    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">PN interest estimated proportionally from unit mix %. Switch to Manual to enter exact figures per stack.</div>
-    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Enter exact PN interest per stack. Leave blank to fall back to auto estimate.</div>
+    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">PN interest loaded from PropNex heatmap data. Scaled down automatically if client floor range is narrower than the full stack. Switch to Manual to override any stack.</div>
+    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Enter exact PN interest to override. Leave blank to use the PropNex heatmap figure for that stack.</div>
 
     <div style="overflow-x:auto">
       <table class="stack-table">
@@ -182,7 +182,7 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
             <th>Stack Floors</th>
             <th>Client Floor Range</th>
             <th>Avail. Units</th>
-            <th id="intHdr">PN Interest (auto)</th>
+            <th id="intHdr">PN Interest (heatmap)</th>
           </tr>
         </thead>
         <tbody id="stackBody">
@@ -245,24 +245,24 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const STACKS = [
-  {id:'01',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[1,30]},
-  {id:'02',block:1,type:'3BR',  lbl:'3BR Compact',   sz:883, fl:[5,30]},
-  {id:'03',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[5,31]},
-  {id:'04',block:1,type:'1BS',  lbl:'1BR+Study',     sz:484, fl:[5,31]},
-  {id:'05',block:1,type:'5BRPL',lbl:'5BR PL',        sz:1582,fl:[5,30]},
-  {id:'06',block:1,type:'2BR',  lbl:'2BR C',         sz:592, fl:[5,30]},
-  {id:'07',block:1,type:'2BRP', lbl:'2BR Premium D', sz:678, fl:[5,31]},
-  {id:'08',block:1,type:'2BRP', lbl:'2BR Premium A', sz:689, fl:[5,31]},
-  {id:'09',block:1,type:'4BR',  lbl:'4BR A',         sz:1173,fl:[1,31]},
-  {id:'10',block:3,type:'4BRPL',lbl:'4BR PL',        sz:1378,fl:[5,30]},
-  {id:'11',block:3,type:'2BR',  lbl:'2BR A',         sz:592, fl:[1,30]},
-  {id:'12',block:3,type:'3BR',  lbl:'3BR C',         sz:883, fl:[1,31]},
-  {id:'13',block:3,type:'3BRP', lbl:'3BR Premium C', sz:1033,fl:[1,30]},
-  {id:'14',block:3,type:'2BRP', lbl:'2BR Premium C', sz:678, fl:[1,30]},
-  {id:'15',block:3,type:'4BR',  lbl:'4BR B',         sz:1173,fl:[1,31]},
-  {id:'16',block:3,type:'2BRP', lbl:'2BR Premium B', sz:689, fl:[3,30]},
-  {id:'17',block:3,type:'2BR',  lbl:'2BR B',         sz:592, fl:[3,30]},
-  {id:'18',block:3,type:'3BR',  lbl:'3BR B',         sz:893, fl:[1,30]},
+  {id:'01',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[1,30], pni:35},
+  {id:'02',block:1,type:'3BR',  lbl:'3BR Compact',   sz:883, fl:[5,30], pni:13},
+  {id:'03',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[5,31], pni:58},
+  {id:'04',block:1,type:'1BS',  lbl:'1BR+Study',     sz:484, fl:[5,31], pni:24},
+  {id:'05',block:1,type:'5BRPL',lbl:'5BR PL',        sz:1582,fl:[5,30], pni:6},
+  {id:'06',block:1,type:'2BR',  lbl:'2BR C',         sz:592, fl:[5,30], pni:18},
+  {id:'07',block:1,type:'2BRP', lbl:'2BR Premium D', sz:678, fl:[5,31], pni:32},
+  {id:'08',block:1,type:'2BRP', lbl:'2BR Premium A', sz:689, fl:[5,31], pni:79},
+  {id:'09',block:1,type:'4BR',  lbl:'4BR A',         sz:1173,fl:[1,31], pni:17},
+  {id:'10',block:3,type:'4BRPL',lbl:'4BR PL',        sz:1378,fl:[5,30], pni:14},
+  {id:'11',block:3,type:'2BR',  lbl:'2BR A',         sz:592, fl:[1,30], pni:60},
+  {id:'12',block:3,type:'3BR',  lbl:'3BR C',         sz:883, fl:[1,31], pni:38},
+  {id:'13',block:3,type:'3BRP', lbl:'3BR Premium C', sz:1033,fl:[1,30], pni:18},
+  {id:'14',block:3,type:'2BRP', lbl:'2BR Premium C', sz:678, fl:[1,30], pni:30},
+  {id:'15',block:3,type:'4BR',  lbl:'4BR B',         sz:1173,fl:[1,31], pni:2},
+  {id:'16',block:3,type:'2BRP', lbl:'2BR Premium B', sz:689, fl:[3,30], pni:15},
+  {id:'17',block:3,type:'2BR',  lbl:'2BR B',         sz:592, fl:[3,30], pni:8},
+  {id:'18',block:3,type:'3BR',  lbl:'3BR B',         sz:893, fl:[1,30], pni:21},
 ];
 
 const TYPES = [
@@ -423,7 +423,7 @@ function setMode(m){
   document.getElementById('modeManualBtn').classList.toggle('active',m==='manual');
   document.getElementById('autoNote').classList.toggle('hidden',m!=='auto');
   document.getElementById('manualNote').classList.toggle('hidden',m!=='manual');
-  document.getElementById('intHdr').textContent=m==='auto'?'PN Interest (auto)':'PN Interest (manual)';
+  document.getElementById('intHdr').textContent=m==='auto'?'PN Interest (heatmap)':'PN Interest (override)';
   document.querySelectorAll('.auto-val').forEach(el=>el.style.display=m==='auto'?'block':'none');
   // Only toggle manual interest inputs in the stack table, not dropout inputs
   document.querySelectorAll('#stackBody .ii').forEach(el=>el.style.display=m==='manual'?'block':'none');
@@ -431,17 +431,15 @@ function setMode(m){
 
 // ── AUTO INTEREST ─────────────────────────────────────────────────────────────
 function refreshAutoVals(){
-  const pnQ=getPNQ();
   selTypes().forEach(type=>{
-    const pct=PCT[type]||0;
-    const pnT=Math.round(pnQ*pct/100);
-    const all=STACKS.filter(s=>s.type===type);
-    const totAvail=all.reduce((n,s)=>n+availUnits(s),0);
-    all.forEach(s=>{
+    STACKS.filter(s=>s.type===type).forEach(s=>{
       const el=document.querySelector(`.auto-val[data-id="${s.id}"]`);
       if(!el) return;
-      const u=availUnits(s);
-      el.textContent=totAvail?Math.round(pnT*u/totAvail):0;
+      // Scale pni proportionally if client has narrowed floor range
+      const totalStack = s.fl[1]-s.fl[0]+1;
+      const avail = availUnits(s);
+      const scaled = totalStack > 0 ? Math.round(s.pni * avail / totalStack) : s.pni;
+      el.textContent = scaled;
     });
   });
 }
@@ -514,9 +512,14 @@ function calculate(){
       if(iMode==='manual'){
         const inp=document.querySelector(`.ii[data-id="${s.id}"]`);
         const m=inp?+inp.value:0;
-        interest=m>0?m:(totAv?Math.round(pnT*u/totAv):0);
+        // Manual: use typed value if provided, else fall back to pni (scaled)
+        const totalStack=s.fl[1]-s.fl[0]+1;
+        const scaled=totalStack>0?Math.round(s.pni*u/totalStack):s.pni;
+        interest=m>0?m:scaled;
       } else {
-        interest=totAv?Math.round(pnT*u/totAv):0;
+        // Auto: use pni, scaled proportionally for client floor range
+        const totalStack=s.fl[1]-s.fl[0]+1;
+        interest=totalStack>0?Math.round(s.pni*u/totalStack):s.pni;
       }
       ti+=interest;
     });
