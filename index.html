@@ -493,7 +493,7 @@ function removeBand(i){
   bands.splice(i,1);
   renderBands();
 }
-function applyDropout(qAhead,totalCheque,pnQ,pnInt){
+function applyDropout(qAhead,totalCheque,pnQ,pnCheque,pnInt){
   if(!totalCheque||!qAhead) return 0;
   // Step 1: apply dropout to ALL buyers ahead across all agencies
   let effAllBuyers=0;
@@ -505,7 +505,7 @@ function applyDropout(qAhead,totalCheque,pnQ,pnInt){
   // Step 2: pnInt is a PN-specific headcount. Convert to total market interest
   // by dividing by PN share, then express as a fraction of all cheques.
   // This gives the proportion of ALL buyers interested in these stacks.
-  const pnShare = pnQ / Math.max(totalCheque, 1);
+  const pnShare = pnCheque / Math.max(totalCheque, 1); // raw PN share = pnCheque/total
   const totalMarketInterest = pnInt / Math.max(pnShare, 0.01);
   const marketInterestRate = totalMarketInterest / totalCheque;
   return effAllBuyers * marketInterestRate;
@@ -559,10 +559,10 @@ function calculate(){
 
   const qAhead  =Math.max(0,clientQ-1);
   // rawComp: of all buyers ahead, what fraction are interested (all agencies)?
-  const pnShareCalc = pnQ / Math.max(totalCheque, 1);
+  const pnShareCalc = pnCheque / Math.max(totalCheque, 1); // raw PN share = pnCheque/total
   const totalMktInterest = pnInt / Math.max(pnShareCalc, 0.01);
   const rawComp = qAhead * (totalMktInterest / totalCheque);
-  const effComp =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnInt));
+  const effComp =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnCheque,pnInt));
   const consumed=Math.min(effComp,totalUnits);
   const left    =Math.max(0,totalUnits-consumed);
   const chance  =Math.min(100,totalUnits>0?(left/totalUnits)*100:0);
@@ -669,21 +669,21 @@ function calculate(){
     </div>
   `;
 
-  buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque);
+  buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque);
   document.getElementById('resSection').classList.remove('hidden');
   document.getElementById('sensSection').classList.remove('hidden');
   document.getElementById('resSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ── SENSITIVITY ───────────────────────────────────────────────────────────────
-function buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque){
+function buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque){
   const tbody=document.getElementById('sensBody');
   tbody.innerHTML='';
   const step=50;
   const start=Math.max(1,Math.floor(Math.max(1,clientQ-200)/step)*step);
   for(let q=start;q<=clientQ+200;q+=step){
     const qA  =Math.max(0,q-1);
-    const comp=Math.round(applyDropout(qA,totalCheque,pnQ,pnInt));
+    const comp=Math.round(applyDropout(qA,totalCheque,pnQ,pnCheque,pnInt));
     const left=Math.max(0,totalUnits-Math.min(comp,totalUnits));
     const pct =totalUnits>0?Math.min(100,(left/totalUnits)*100):0;
     const v   =verdict(pct);
