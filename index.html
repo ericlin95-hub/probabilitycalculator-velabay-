@@ -6,748 +6,608 @@
 <title>Vela Bay — Unit Booking Probability</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#f4f6fb; --surface:#fff; --surface2:#f0f3fa; --border:#dde2ef;
-    --accent:#3b5bdb; --accent-light:#eef1fd; --text:#1c2340; --muted:#8492b0;
-    --shadow:0 1px 3px rgba(28,35,64,.07),0 4px 16px rgba(28,35,64,.05);
-    --low:#e03131; --low-bg:#fff0f0; --med:#e67700; --med-bg:#fff8ec;
-    --high:#0ca678; --high-bg:#edfaf5; --vhigh:#0891b2; --vhigh-bg:#ecfbff;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 16px 80px}
+:root {
+  --bg:#f4f6fb; --surface:#fff; --surface2:#f0f3fa; --border:#dde2ef;
+  --accent:#3b5bdb; --al:#eef1fd; --text:#1c2340; --muted:#8492b0;
+  --shadow:0 1px 3px rgba(28,35,64,.07),0 4px 16px rgba(28,35,64,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 16px 80px}
 
-  /* ── Header ── */
-  .header{max-width:980px;margin:0 auto 28px}
-  .header-inner{background:var(--accent);border-radius:16px;padding:26px 32px;position:relative;overflow:hidden}
-  .header-inner::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
-  .header-inner::after{content:'';position:absolute;bottom:-60px;right:80px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04)}
-  .htag{font-size:10px;letter-spacing:.22em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:8px}
-  .header h1{font-family:'Syne',sans-serif;font-size:clamp(24px,5vw,42px);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1}
-  .header h1 span{color:rgba(255,255,255,.45);font-weight:400}
-  .header-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;letter-spacing:.04em}
+.header{max-width:980px;margin:0 auto 28px}
+.hi{background:var(--accent);border-radius:16px;padding:26px 32px;position:relative;overflow:hidden}
+.hi::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hi::after{content:'';position:absolute;bottom:-60px;right:80px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04)}
+.htag{font-size:10px;letter-spacing:.22em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:8px}
+.header h1{font-family:'Syne',sans-serif;font-size:clamp(24px,5vw,42px);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1}
+.header h1 span{color:rgba(255,255,255,.45);font-weight:400}
+.hsub{font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;letter-spacing:.04em}
 
-  /* ── Layout ── */
-  .layout{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:640px){.layout{grid-template-columns:1fr}}
-  .full{grid-column:1/-1}
+.layout{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.layout{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
 
-  /* ── Cards ── */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
-  .card-title{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-  .card-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.ct{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.ct::after{content:'';flex:1;height:1px;background:var(--border)}
 
-  /* ── Step badge ── */
-  .step-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;flex-shrink:0}
-  .step-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .step-title{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
-  .step-header::after{content:'';flex:1;height:1px;background:var(--border)}
+label{display:block;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.1)}
+.ir{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.ig{margin-bottom:14px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.share-pill{display:inline-block;padding:1px 8px;background:var(--al);color:var(--accent);border-radius:10px;font-size:11px;font-weight:500;margin-left:6px}
 
-  /* ── Form ── */
-  label{display:block;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
-  input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
-  input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.1)}
-  .input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-  .input-group{margin-bottom:14px}
-  .divider{height:1px;background:var(--border);margin:14px 0}
-  .share-pill{display:inline-block;padding:1px 8px;background:var(--accent-light);color:var(--accent);border-radius:10px;font-size:11px;font-weight:500;margin-left:6px}
+/* Type chips */
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;user-select:none;transition:all .15s}
+.chip:hover{border-color:var(--accent);background:var(--al)}
+.chip.active{border-color:var(--accent);background:var(--al)}
+.chip-lbl{font-size:10px;letter-spacing:.04em;color:var(--text)}
+.chip-sub{font-size:9px;color:var(--muted)}
+.chip.active .chip-lbl{color:var(--accent);font-weight:500}
 
-  /* ── Chips (type & stack) ── */
-  .chip-grid{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;user-select:none;transition:all .15s}
-  .chip:hover{border-color:var(--accent);background:var(--accent-light)}
-  .chip.active{border-color:var(--accent);background:var(--accent-light)}
-  .chip-label{font-size:10px;letter-spacing:.04em;color:var(--text)}
-  .chip-sub{font-size:9px;color:var(--muted)}
-  .chip.active .chip-label{color:var(--accent);font-weight:500}
-  .chip.active .chip-sub{color:var(--accent);opacity:.7}
+/* Floor range row */
+.floor-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:16px}
+.floor-row label{margin:0;white-space:nowrap;font-size:10px}
+.floor-inputs{display:flex;align-items:center;gap:8px}
+.fi{width:68px!important;padding:7px 10px!important;font-size:12px!important;margin-bottom:0!important}
+.floor-sep{font-size:11px;color:var(--muted)}
+.floor-summary{font-size:10px;color:var(--accent);font-weight:500;margin-left:4px}
 
-  /* ── Stack step (step 2) ── */
-  .stack-step{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
-  .stack-step.hidden{display:none}
+/* Stack table */
+.stack-table{width:100%;border-collapse:collapse;font-size:11px}
+.stack-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);background:var(--surface2);white-space:nowrap}
+.stack-table td{padding:8px 10px;border-bottom:1px solid var(--surface2);vertical-align:middle}
+.stack-table tr:last-child td{border-bottom:none}
+.stack-table tr:hover td{background:var(--al)}
+.stack-table tr.dimmed td{opacity:.4}
+.tgh td{background:var(--surface2)!important;padding:5px 10px!important}
+.tgh-inner{display:flex;align-items:center;justify-content:space-between}
+.tgh-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.tgh-btns{display:flex;gap:6px}
+.tgh-btn{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .12s}
+.tgh-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--al)}
+.sbadge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;background:var(--al);color:var(--accent);font-weight:500}
+.scheck{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+.avail-units{font-weight:600;color:var(--text)}
+.avail-zero{color:#e03131!important}
+.auto-val{color:var(--accent);font-size:11px;font-weight:500}
+.ii{padding:5px 8px!important;font-size:11px!important;width:72px!important}
 
-  /* ── Floor preference (step 3 inline) ── */
-  .floor-pref-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)}
-  .floor-pref-row.hidden{display:none}
-  .floor-pref-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .floor-pref-inputs{display:flex;align-items:center;gap:8px}
-  .floor-pref-input{width:72px !important;padding:7px 10px !important;font-size:12px !important}
-  .floor-sep{font-size:11px;color:var(--muted)}
-  .floor-pref-note{font-size:10px;color:var(--muted);flex:1;min-width:160px}
+/* Interest mode */
+.mode-row{display:flex;gap:8px;margin-bottom:14px}
+.mode-btn{flex:1;padding:8px;border:1.5px solid var(--border);background:var(--surface2);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center}
+.mode-btn.active{border-color:var(--accent);background:var(--al);color:var(--accent);font-weight:500}
 
-  /* ── Stack table ── */
-  .table-wrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
-  .table-wrap.hidden{display:none}
-  .stack-table{width:100%;border-collapse:collapse;font-size:11px}
-  .stack-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);background:var(--surface2);white-space:nowrap}
-  .stack-table td{padding:8px 10px;border-bottom:1px solid var(--surface2);vertical-align:middle}
-  .stack-table tr:last-child td{border-bottom:none}
-  .stack-table tr:hover td{background:var(--accent-light)}
-  .type-group-hdr td{background:var(--surface2)!important;padding:5px 10px!important;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:500}
-  .stack-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;background:var(--accent-light);color:var(--accent);font-weight:500}
-  .auto-val{color:var(--accent);font-size:11px;font-weight:500}
-  .manual-val{display:none}
-  .interest-input{padding:5px 8px!important;font-size:11px!important;width:72px!important}
-  .units-col{font-weight:600;color:var(--text)}
+.btn{width:100%;padding:15px;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;border:none;border-radius:10px;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 4px 14px rgba(59,91,219,.28)}
+.btn:hover{background:#2f4ec7;transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,91,219,.38)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{background:none;border:1.5px dashed var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--al)}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}
+.del-btn:hover{background:#fff0f0;color:#e03131}
 
-  /* ── Interest mode ── */
-  .mode-row{display:flex;gap:8px;margin-bottom:14px}
-  .mode-btn{flex:1;padding:8px;border:1.5px solid var(--border);background:var(--surface2);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center}
-  .mode-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:500}
-
-  /* ── Buttons ── */
-  .btn{width:100%;padding:15px;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;border:none;border-radius:10px;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 4px 14px rgba(59,91,219,.28)}
-  .btn:hover{background:#2f4ec7;transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,91,219,.38)}
-  .btn:active{transform:translateY(0)}
-  .btn-ghost{background:none;border:1.5px dashed var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s}
-  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
-  .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}
-  .del-btn:hover{background:#fff0f0;color:#e03131}
-
-  /* ── Results ── */
-  .result-hero{text-align:center;padding:28px 16px 22px;border-radius:12px;margin-bottom:16px;border:1px solid var(--border)}
-  .result-pct{font-family:'Syne',sans-serif;font-size:72px;font-weight:800;line-height:1;letter-spacing:-.03em}
-  .result-lbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-  .result-verdict{display:inline-block;margin-top:14px;padding:5px 16px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
-  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-  .stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center}
-  .stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent)}
-  .stat-key{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-
-  /* ── Sensitivity ── */
-  .sens-table{width:100%;border-collapse:collapse;font-size:11px}
-  .sens-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:7px 10px;text-align:left;border-bottom:1.5px solid var(--border);background:var(--surface2)}
-  .sens-table td{padding:9px 10px;border-bottom:1px solid var(--surface2)}
-  .sens-table tr.highlight td{background:var(--accent-light)}
-  .prob-bar-wrap{display:flex;align-items:center;gap:8px}
-  .prob-bar{height:6px;border-radius:3px;flex-shrink:0;min-width:2px}
-
-  /* ── Breakdown ── */
-  .breakdown{list-style:none;font-size:11px}
-  .breakdown li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2);color:var(--muted)}
-  .breakdown li:last-child{border-bottom:none}
-  .breakdown li span:last-child{color:var(--text);font-weight:500}
-
-  .hidden{display:none}
-  .note{font-size:10px;color:var(--muted);padding:10px 14px;background:var(--accent-light);border-radius:7px;border-left:3px solid var(--accent);line-height:1.7;letter-spacing:.02em}
-  .empty-state{text-align:center;padding:20px;color:var(--muted);font-size:11px;letter-spacing:.06em}
-  .dropout-from,.dropout-to,.dropout-pct{width:70px!important}
+/* Results */
+.result-hero{text-align:center;padding:28px 16px 22px;border-radius:12px;margin-bottom:16px;border:1px solid var(--border)}
+.rpct{font-family:'Syne',sans-serif;font-size:72px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.rlbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.rverdict{display:inline-block;margin-top:14px;padding:5px 16px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent)}
+.stat-key{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.sens-table{width:100%;border-collapse:collapse;font-size:11px}
+.sens-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:7px 10px;text-align:left;border-bottom:1.5px solid var(--border);background:var(--surface2)}
+.sens-table td{padding:9px 10px;border-bottom:1px solid var(--surface2)}
+.sens-table tr.hl td{background:var(--al)}
+.pb-wrap{display:flex;align-items:center;gap:8px}
+.pb{height:6px;border-radius:3px;flex-shrink:0;min-width:2px}
+.breakdown{list-style:none;font-size:11px}
+.breakdown li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--surface2);color:var(--muted)}
+.breakdown li:last-child{border-bottom:none}
+.breakdown li span:last-child{color:var(--text);font-weight:500}
+.hidden{display:none}
+.note{font-size:10px;color:var(--muted);padding:10px 14px;background:var(--al);border-radius:7px;border-left:3px solid var(--accent);line-height:1.7}
+.empty-state{text-align:center;padding:20px;color:var(--muted);font-size:11px;letter-spacing:.06em}
+.dfi{width:70px!important}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-inner">
+  <div class="hi">
     <div class="htag">PropNex · New Launch Analytics</div>
     <h1>Vela Bay <span>/ Probability Calculator</span></h1>
-    <div class="header-sub">515 units · 1 &amp; 3 Bayshore Walk · Queue booking chance estimator</div>
+    <div class="hsub">515 units · 1 &amp; 3 Bayshore Walk · Queue booking chance estimator</div>
   </div>
 </div>
 
 <div class="layout">
 
-  <!-- ── Market Data ── -->
+  <!-- Market Data -->
   <div class="card">
-    <div class="card-title">Market Data</div>
-    <div class="input-row">
-      <div class="input-group">
-        <label>Total Cheques</label>
-        <input type="number" id="totalCheque" value="1000" min="1">
-      </div>
-      <div class="input-group">
-        <label>PN Cheques</label>
-        <input type="number" id="pnCheque" value="470" min="1" oninput="syncShare()">
-      </div>
+    <div class="ct">Market Data</div>
+    <div class="ir">
+      <div class="ig"><label>Total Cheques</label><input type="number" id="totalCheque" value="1000" min="1"></div>
+      <div class="ig"><label>PN Cheques</label><input type="number" id="pnCheque" value="470" min="1" oninput="syncShare()"></div>
     </div>
-    <div class="input-group">
+    <div class="ig">
       <label>PN Market Share % <span class="share-pill" id="shareDisplay">47.0%</span></label>
       <input type="number" id="pnShare" value="47" min="1" max="100" step="0.1" oninput="syncCheque()">
     </div>
     <div class="divider"></div>
-    <div class="input-row">
-      <div class="input-group">
-        <label>Priority / VIP</label>
-        <input type="number" id="priority" value="0" min="0">
-      </div>
-      <div class="input-group">
-        <label>Bulk / Developer</label>
-        <input type="number" id="bulk" value="0" min="0">
-      </div>
+    <div class="ir">
+      <div class="ig"><label>Priority / VIP</label><input type="number" id="priority" value="0" min="0"></div>
+      <div class="ig"><label>Bulk / Developer</label><input type="number" id="bulk" value="0" min="0"></div>
     </div>
     <div class="note">PN Queue = PN Cheques − Priority / VIP − Bulk / Developer</div>
   </div>
 
-  <!-- ── Client Setup ── -->
+  <!-- Client Setup -->
   <div class="card">
-    <div class="card-title">Client Setup</div>
-    <div class="input-group">
-      <label>Client Queue Number</label>
-      <input type="number" id="queueNo" value="200" min="1">
-    </div>
-
-    <!-- Step 1: Bedroom type -->
-    <div class="step-header">
-      <span class="step-badge">1</span>
-      <span class="step-title">Select Bedroom Type(s)</span>
-    </div>
-    <div class="chip-grid" id="typeGrid"></div>
-
-    <!-- Step 2: Stack chips -->
-    <div class="stack-step hidden" id="stackStep">
-      <div class="step-header">
-        <span class="step-badge">2</span>
-        <span class="step-title">Select Specific Stack(s)</span>
-      </div>
-      <div class="chip-grid" id="stackGrid"></div>
-    </div>
-
-    <!-- Step 3: Floor preference -->
-    <div class="floor-pref-row hidden" id="floorPrefRow">
-      <span class="floor-pref-label"><span class="step-badge" style="display:inline-flex;vertical-align:middle;margin-right:6px">3</span>Min Floor</span>
-      <div class="floor-pref-inputs">
-        <input type="number" id="minFloor" class="floor-pref-input" value="1" min="1" max="31" oninput="updateTableUnits()">
-        <span class="floor-sep">and above</span>
-      </div>
-      <span class="floor-pref-note">Filters available units across all selected stacks</span>
+    <div class="ct">Client Setup</div>
+    <div class="ig"><label>Client Queue Number</label><input type="number" id="queueNo" value="200" min="1"></div>
+    <div class="ig">
+      <label>Bedroom Type(s) — select all that apply</label>
+      <div class="chip-grid" id="typeGrid"></div>
     </div>
   </div>
 
-  <!-- ── Stack Table & PN Interest ── -->
+  <!-- Stack Selection -->
   <div class="card full">
-    <div class="card-title">Stack Details &amp; PN Interest</div>
+    <div class="ct">Stack Selection &amp; PN Interest</div>
+
+    <!-- Per-stack floor range note -->
+    <div class="note" style="margin-bottom:14px">Set preferred floor range per stack below. Pre-filled with each stack's available floors — adjust to match your client's preference.</div>
+
+    <!-- Interest mode -->
     <div class="mode-row">
       <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Auto spread</div>
       <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual per stack</div>
     </div>
-    <div id="autoNote" class="note" style="margin-bottom:14px">
-      PN interest per stack estimated proportionally from unit mix %. Switch to Manual to enter exact figures.
-    </div>
-    <div id="manualNote" class="note hidden" style="margin-bottom:14px">
-      Enter exact PN interest per stack. Leave blank to fall back to auto estimate for that stack.
-    </div>
+    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">PN interest estimated proportionally from unit mix %. Switch to Manual to enter exact figures per stack.</div>
+    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Enter exact PN interest per stack. Leave blank to fall back to auto estimate.</div>
+
     <div style="overflow-x:auto">
       <table class="stack-table">
         <thead>
           <tr>
+            <th>✓</th>
             <th>Stack</th>
             <th>Block</th>
             <th>Type</th>
             <th>Size (sqft)</th>
             <th>Stack Floors</th>
+            <th>Client Floor Range</th>
             <th>Avail. Units</th>
-            <th id="interestHeader">PN Interest (auto)</th>
+            <th id="intHdr">PN Interest (auto)</th>
           </tr>
         </thead>
         <tbody id="stackBody">
-          <tr><td colspan="7" class="empty-state">Select bedroom type(s) and stack(s) above to begin</td></tr>
+          <tr><td colspan="9" class="empty-state">Select a bedroom type above to load stacks</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ── Dropout Rates ── -->
+  <!-- Dropout -->
   <div class="card full">
-    <div class="card-title">Dropout Rate by Queue Band</div>
+    <div class="ct">Dropout Rate by Queue Band</div>
     <div class="note" style="margin-bottom:16px">
-      % of ALL buyers (all agencies) in each queue band who do not end up purchasing. Applied before PN market share to get effective competition.
+      % of ALL buyers (all agencies) in each band who don't end up purchasing. Applied before PN share to get effective competition.
     </div>
     <div style="overflow-x:auto">
       <table class="stack-table">
-        <thead>
-          <tr>
-            <th>Band</th><th>Queue From</th><th>Queue To</th><th>Dropout %</th><th style="width:32px"></th>
-          </tr>
-        </thead>
+        <thead><tr><th>Band</th><th>Queue From</th><th>Queue To</th><th>Dropout %</th><th style="width:32px"></th></tr></thead>
         <tbody id="dropoutBody"></tbody>
       </table>
     </div>
-    <button class="btn-ghost" onclick="addDropoutBand()" style="margin-top:12px">+ Add band</button>
+    <button class="btn-ghost" onclick="addBand()" style="margin-top:12px">+ Add band</button>
   </div>
 
-  <!-- ── Calculate ── -->
+  <!-- Calculate -->
   <div class="card full">
     <button class="btn" onclick="calculate()">Calculate Probability</button>
   </div>
 
-  <!-- ── Results ── -->
-  <div class="card full hidden" id="resultsSection">
-    <div class="card-title">Result</div>
-    <div class="result-hero" id="resultHero">
-      <div class="result-pct" id="resultPct">—</div>
-      <div class="result-lbl">Estimated chance of securing a unit</div>
-      <div class="result-verdict" id="resultVerdict"></div>
+  <!-- Results -->
+  <div class="card full hidden" id="resSection">
+    <div class="ct">Result</div>
+    <div class="result-hero" id="resHero">
+      <div class="rpct" id="resPct">—</div>
+      <div class="rlbl">Estimated chance of securing a unit</div>
+      <div class="rverdict" id="resVerdict"></div>
     </div>
     <div class="stats-grid">
-      <div class="stat-box"><div class="stat-val" id="statPNQueue">—</div><div class="stat-key">PN Queue</div></div>
-      <div class="stat-box"><div class="stat-val" id="statBefore">—</div><div class="stat-key">Eff. Competitors</div></div>
-      <div class="stat-box"><div class="stat-val" id="statUnitsLeft">—</div><div class="stat-key">Units Left (est.)</div></div>
+      <div class="stat-box"><div class="stat-val" id="sPNQ">—</div><div class="stat-key">PN Queue</div></div>
+      <div class="stat-box"><div class="stat-val" id="sBef">—</div><div class="stat-key">Eff. Competitors</div></div>
+      <div class="stat-box"><div class="stat-val" id="sUL">—</div><div class="stat-key">Units Left (est.)</div></div>
     </div>
-    <ul class="breakdown" id="breakdownList"></ul>
+    <ul class="breakdown" id="bdList"></ul>
   </div>
 
-  <!-- ── Sensitivity ── -->
+  <!-- Sensitivity -->
   <div class="card full hidden" id="sensSection">
-    <div class="card-title">Sensitivity — Chance by Queue Number</div>
+    <div class="ct">Sensitivity — Chance by Queue Number</div>
     <div style="overflow-x:auto">
       <table class="sens-table">
-        <thead>
-          <tr>
-            <th>Queue #</th><th>Eff. Competitors</th><th>Est. Units Left</th><th>Chance %</th><th style="width:200px">Likelihood</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Queue #</th><th>Eff. Competitors</th><th>Est. Units Left</th><th>Chance %</th><th style="width:200px">Likelihood</th></tr></thead>
         <tbody id="sensBody"></tbody>
       </table>
     </div>
     <div style="margin-top:14px" class="note">±200 queue positions around your client, steps of 50.</div>
   </div>
 
-</div><!-- /layout -->
+</div>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const STACKS = [
-  {id:'01',block:1,type:'3BRP', label:'3BR Premium',   size:1033,floors:[1,30]},
-  {id:'02',block:1,type:'3BR',  label:'3BR Compact',   size:883, floors:[5,30]},
-  {id:'03',block:1,type:'3BRP', label:'3BR Premium',   size:1033,floors:[5,31]},
-  {id:'04',block:1,type:'1BS',  label:'1BR+Study',     size:484, floors:[5,31]},
-  {id:'05',block:1,type:'5BRPL',label:'5BR PL',        size:1582,floors:[5,30]},
-  {id:'06',block:1,type:'2BR',  label:'2BR C',         size:592, floors:[5,30]},
-  {id:'07',block:1,type:'2BRP', label:'2BR Premium D', size:678, floors:[5,31]},
-  {id:'08',block:1,type:'2BRP', label:'2BR Premium A', size:689, floors:[5,31]},
-  {id:'09',block:1,type:'4BR',  label:'4BR A',         size:1173,floors:[1,31]},
-  {id:'10',block:3,type:'4BRPL',label:'4BR PL',        size:1378,floors:[5,30]},
-  {id:'11',block:3,type:'2BR',  label:'2BR A',         size:592, floors:[1,30]},
-  {id:'12',block:3,type:'3BR',  label:'3BR C',         size:883, floors:[1,31]},
-  {id:'13',block:3,type:'3BRP', label:'3BR Premium C', size:1033,floors:[1,30]},
-  {id:'14',block:3,type:'2BRP', label:'2BR Premium C', size:678, floors:[1,30]},
-  {id:'15',block:3,type:'4BR',  label:'4BR B',         size:1173,floors:[1,31]},
-  {id:'16',block:3,type:'2BRP', label:'2BR Premium B', size:689, floors:[3,30]},
-  {id:'17',block:3,type:'2BR',  label:'2BR B',         size:592, floors:[3,30]},
-  {id:'18',block:3,type:'3BR',  label:'3BR B',         size:893, floors:[1,30]},
+  {id:'01',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[1,30]},
+  {id:'02',block:1,type:'3BR',  lbl:'3BR Compact',   sz:883, fl:[5,30]},
+  {id:'03',block:1,type:'3BRP', lbl:'3BR Premium',   sz:1033,fl:[5,31]},
+  {id:'04',block:1,type:'1BS',  lbl:'1BR+Study',     sz:484, fl:[5,31]},
+  {id:'05',block:1,type:'5BRPL',lbl:'5BR PL',        sz:1582,fl:[5,30]},
+  {id:'06',block:1,type:'2BR',  lbl:'2BR C',         sz:592, fl:[5,30]},
+  {id:'07',block:1,type:'2BRP', lbl:'2BR Premium D', sz:678, fl:[5,31]},
+  {id:'08',block:1,type:'2BRP', lbl:'2BR Premium A', sz:689, fl:[5,31]},
+  {id:'09',block:1,type:'4BR',  lbl:'4BR A',         sz:1173,fl:[1,31]},
+  {id:'10',block:3,type:'4BRPL',lbl:'4BR PL',        sz:1378,fl:[5,30]},
+  {id:'11',block:3,type:'2BR',  lbl:'2BR A',         sz:592, fl:[1,30]},
+  {id:'12',block:3,type:'3BR',  lbl:'3BR C',         sz:883, fl:[1,31]},
+  {id:'13',block:3,type:'3BRP', lbl:'3BR Premium C', sz:1033,fl:[1,30]},
+  {id:'14',block:3,type:'2BRP', lbl:'2BR Premium C', sz:678, fl:[1,30]},
+  {id:'15',block:3,type:'4BR',  lbl:'4BR B',         sz:1173,fl:[1,31]},
+  {id:'16',block:3,type:'2BRP', lbl:'2BR Premium B', sz:689, fl:[3,30]},
+  {id:'17',block:3,type:'2BR',  lbl:'2BR B',         sz:592, fl:[3,30]},
+  {id:'18',block:3,type:'3BR',  lbl:'3BR B',         sz:893, fl:[1,30]},
 ];
 
-const TYPE_DEFS = [
-  {key:'1BS',  label:'1BR + Study',      size:'484 sqft'},
-  {key:'2BR',  label:'2-Bedroom',        size:'592 sqft'},
-  {key:'2BRP', label:'2BR Premium',      size:'678–689 sqft'},
-  {key:'3BR',  label:'3-Bedroom',        size:'883–893 sqft'},
-  {key:'3BRP', label:'3BR Premium',      size:'1,033 sqft'},
-  {key:'4BR',  label:'4-Bedroom',        size:'1,173 sqft'},
-  {key:'4BRPL',label:'4BR Private Lift', size:'1,378 sqft'},
-  {key:'5BRPL',label:'5BR Private Lift', size:'1,582 sqft'},
-  {key:'PH',   label:'Penthouse',        size:'1,765 sqft'},
+const TYPES = [
+  {k:'1BS',  n:'1BR + Study',      s:'484 sqft'},
+  {k:'2BR',  n:'2-Bedroom',        s:'592 sqft'},
+  {k:'2BRP', n:'2BR Premium',      s:'678–689 sqft'},
+  {k:'3BR',  n:'3-Bedroom',        s:'883–893 sqft'},
+  {k:'3BRP', n:'3BR Premium',      s:'1,033 sqft'},
+  {k:'4BR',  n:'4-Bedroom',        s:'1,173 sqft'},
+  {k:'4BRPL',n:'4BR Private Lift', s:'1,378 sqft'},
+  {k:'5BRPL',n:'5BR Private Lift', s:'1,582 sqft'},
+  {k:'PH',   n:'Penthouse',        s:'1,765 sqft'},
 ];
 
-const TYPE_PCT = {
+const PCT = {
   '1BS':5.24,'2BR':16.31,'2BRP':21.94,'3BR':16.89,
   '3BRP':17.09,'4BR':12.04,'4BRPL':5.05,'5BRPL':5.05,'PH':0.39
 };
 
-let interestMode = 'auto';
+let iMode = 'auto';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-function totalUnitsForStack(s){ return s.floors[1]-s.floors[0]+1; }
-function availUnitsForStack(s){
-  const minF = +document.getElementById('minFloor').value || 1;
-  const from = Math.max(s.floors[0], minF);
-  const to   = s.floors[1];
-  return Math.max(0, to - from + 1);
+function availUnits(s){
+  const minEl=document.querySelector(`.fl-min[data-id="${s.id}"]`);
+  const maxEl=document.querySelector(`.fl-max[data-id="${s.id}"]`);
+  const mn = minEl ? (+minEl.value||s.fl[0]) : s.fl[0];
+  const mx = maxEl ? (+maxEl.value||s.fl[1]) : s.fl[1];
+  const from=Math.max(s.fl[0], Math.min(mn, s.fl[1]));
+  const to  =Math.min(s.fl[1], Math.max(mx, from));
+  return Math.max(0, to-from+1);
 }
-function getSelectedTypes(){
-  return [...document.querySelectorAll('#typeGrid .chip.active')].map(el=>el.dataset.key);
+function selTypes(){ return [...document.querySelectorAll('#typeGrid .chip.active')].map(c=>c.dataset.k); }
+function checkedIds(){ return [...document.querySelectorAll('.scheck:checked')].map(c=>c.dataset.id); }
+function getPNQ(){
+  return Math.max(0,(+document.getElementById('pnCheque').value||0)
+                  -(+document.getElementById('priority').value||0)
+                  -(+document.getElementById('bulk').value||0));
 }
-function getSelectedStacks(){
-  return [...document.querySelectorAll('#stackGrid .chip.active')].map(el=>el.dataset.id);
-}
-function getPnQueue(){
-  const pn=+document.getElementById('pnCheque').value||0;
-  const pr=+document.getElementById('priority').value||0;
-  const bk=+document.getElementById('bulk').value||0;
-  return Math.max(0,pn-pr-bk);
+function verdict(p){
+  if(p>=70) return{c:'#0891b2',l:'Very High',hb:'#ecfbff',vb:'rgba(8,145,178,.1)'};
+  if(p>=50) return{c:'#0ca678',l:'Likely',   hb:'#edfaf5',vb:'rgba(12,166,120,.1)'};
+  if(p>=30) return{c:'#e67700',l:'Moderate', hb:'#fff8ec',vb:'rgba(230,119,0,.1)'};
+  if(p>0)   return{c:'#e03131',l:'Low',      hb:'#fff0f0',vb:'rgba(224,49,49,.1)'};
+  return         {c:'#e03131',l:'Very Low',  hb:'#fff0f0',vb:'rgba(224,49,49,.1)'};
 }
 
-// ── SYNC MARKET SHARE ─────────────────────────────────────────────────────────
+// ── SYNC ──────────────────────────────────────────────────────────────────────
 function syncShare(){
-  const total=+document.getElementById('totalCheque').value||1;
-  const pn   =+document.getElementById('pnCheque').value||0;
-  const pct  =(pn/total*100).toFixed(1);
+  const t=+document.getElementById('totalCheque').value||1;
+  const p=+document.getElementById('pnCheque').value||0;
+  const pct=(p/t*100).toFixed(1);
   document.getElementById('pnShare').value=pct;
   document.getElementById('shareDisplay').textContent=pct+'%';
-  updateAutoInterest();
+  refreshAutoVals();
 }
 function syncCheque(){
-  const total=+document.getElementById('totalCheque').value||1;
-  const pct  =+document.getElementById('pnShare').value||0;
-  document.getElementById('pnCheque').value=Math.round(total*pct/100);
+  const t=+document.getElementById('totalCheque').value||1;
+  const pct=+document.getElementById('pnShare').value||0;
+  document.getElementById('pnCheque').value=Math.round(t*pct/100);
   document.getElementById('shareDisplay').textContent=parseFloat(pct).toFixed(1)+'%';
-  updateAutoInterest();
+  refreshAutoVals();
 }
 
-// ── STEP 1: TYPE CHIPS ────────────────────────────────────────────────────────
+// ── TYPE CHIPS ────────────────────────────────────────────────────────────────
 function buildTypeChips(){
-  const grid=document.getElementById('typeGrid');
-  grid.innerHTML='';
-  TYPE_DEFS.forEach(t=>{
+  const g=document.getElementById('typeGrid');
+  g.innerHTML='';
+  TYPES.forEach(t=>{
     const c=document.createElement('div');
-    c.className='chip';
-    c.dataset.key=t.key;
-    c.innerHTML=`<span class="chip-label">${t.label}</span><span class="chip-sub">${t.size}</span>`;
-    c.addEventListener('click',()=>{ c.classList.toggle('active'); onTypeChange(); });
-    grid.appendChild(c);
+    c.className='chip'; c.dataset.k=t.k;
+    c.innerHTML=`<span class="chip-lbl">${t.n}</span><span class="chip-sub">${t.s}</span>`;
+    c.addEventListener('click',()=>{ c.classList.toggle('active'); renderTable(); });
+    g.appendChild(c);
   });
 }
 
-function onTypeChange(){
-  buildStackChips();
+// ── FLOOR FILTER ──────────────────────────────────────────────────────────────
+function onStackFloorChange(id){
+  const stk=STACKS.find(x=>x.id===id);
+  if(!stk) return;
+  const u=availUnits(stk);
+  const el=document.querySelector(`.avail-units[data-id="${id}"]`);
+  if(el){ el.textContent=u; el.classList.toggle('avail-zero',u===0); }
+  refreshAutoVals();
 }
 
-// ── STEP 2: STACK CHIPS ───────────────────────────────────────────────────────
-function buildStackChips(){
-  const types   = getSelectedTypes();
-  const stepEl  = document.getElementById('stackStep');
-  const grid    = document.getElementById('stackGrid');
-  const floorEl = document.getElementById('floorPrefRow');
-
-  if(!types.length){
-    stepEl.classList.add('hidden');
-    floorEl.classList.add('hidden');
-    renderTable([]);
-    return;
-  }
-
-  stepEl.classList.remove('hidden');
-  grid.innerHTML='';
-
-  // Remember previously selected stacks
-  const prevSelected = getSelectedStacks();
-
-  // Build one chip per stack, grouped by type
-  types.forEach(type=>{
-    const typeDef = TYPE_DEFS.find(t=>t.key===type);
-    const stacks  = STACKS.filter(s=>s.type===type);
-    if(!stacks.length) return;
-
-    // Type label separator chip (non-clickable)
-    const sep=document.createElement('div');
-    sep.style.cssText='width:100%;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:6px 0 2px;font-family:"DM Mono",monospace';
-    sep.textContent=typeDef.label;
-    grid.appendChild(sep);
-
-    stacks.forEach(s=>{
-      const c=document.createElement('div');
-      c.className='chip';
-      c.dataset.id=s.id;
-      c.dataset.type=s.type;
-      // Re-activate if it was previously selected
-      if(prevSelected.includes(s.id)) c.classList.add('active');
-      c.innerHTML=`<span class="chip-label">Stack ${s.id}</span><span class="chip-sub">Blk ${s.block} · ${s.size.toLocaleString()} sqft</span>`;
-      c.addEventListener('click',()=>{ c.classList.toggle('active'); onStackChange(); });
-      grid.appendChild(c);
-    });
-  });
-
-  onStackChange();
-}
-
-function onStackChange(){
-  const selected = getSelectedStacks();
-  const floorEl  = document.getElementById('floorPrefRow');
-  if(selected.length){
-    floorEl.classList.remove('hidden');
-  } else {
-    floorEl.classList.add('hidden');
-  }
-  renderTable(selected);
-}
-
-// ── STEP 3: TABLE + FLOOR FILTER ─────────────────────────────────────────────
-function updateTableUnits(){
-  // Re-render avail units column and auto interest when min floor changes
-  const selectedIds = getSelectedStacks();
-  const minF = +document.getElementById('minFloor').value || 1;
-
-  selectedIds.forEach(id=>{
-    const s   = STACKS.find(x=>x.id===id);
-    if(!s) return;
-    const avail = availUnitsForStack(s);
-    const el    = document.querySelector(`.avail-units[data-id="${id}"]`);
-    if(el) el.textContent = avail;
-  });
-  updateAutoInterest();
-}
-
-function renderTable(selectedIds){
-  const tbody = document.getElementById('stackBody');
+// ── RENDER TABLE ──────────────────────────────────────────────────────────────
+function renderTable(){
+  const types=selTypes();
+  const tbody=document.getElementById('stackBody');
   tbody.innerHTML='';
 
-  if(!selectedIds.length){
-    tbody.innerHTML='<tr><td colspan="7" class="empty-state">Select stack(s) above to see details</td></tr>';
-    updateAutoInterest();
+  if(!types.length){
+    tbody.innerHTML='<tr><td colspan="9" class="empty-state">Select a bedroom type above to load stacks</td></tr>';
     return;
   }
 
-  const minF = +document.getElementById('minFloor').value || 1;
-
-  // Group by type
-  const types = getSelectedTypes();
   types.forEach(type=>{
-    const typeDef = TYPE_DEFS.find(t=>t.key===type);
-    const stacks  = STACKS.filter(s=>s.type===type && selectedIds.includes(s.id));
+    const td=TYPES.find(t=>t.k===type);
+    const stacks=STACKS.filter(s=>s.type===type);
     if(!stacks.length) return;
 
+    // Group header with Select All / Deselect All
     const hdr=document.createElement('tr');
-    hdr.className='type-group-hdr';
-    hdr.innerHTML=`<td colspan="7">${typeDef.label} — ${typeDef.size}</td>`;
+    hdr.className='tgh';
+    hdr.innerHTML=`<td colspan="9"><div class="tgh-inner">
+      <span class="tgh-lbl">${td.n} — ${td.s}</span>
+      <div class="tgh-btns">
+        <button class="tgh-btn" onclick="setGroup('${type}',true)">Select all</button>
+        <button class="tgh-btn" onclick="setGroup('${type}',false)">Deselect all</button>
+      </div>
+    </div></td>`;
     tbody.appendChild(hdr);
 
     stacks.forEach(s=>{
-      const avail = availUnitsForStack(s);
+      const u=availUnits(s);
       const tr=document.createElement('tr');
       tr.innerHTML=`
-        <td><span class="stack-badge">Stack ${s.id}</span></td>
+        <td><input type="checkbox" class="scheck" data-id="${s.id}" data-type="${s.type}" checked onchange="refreshAutoVals()"></td>
+        <td><span class="sbadge">Stack ${s.id}</span></td>
         <td style="color:var(--muted)">Block ${s.block}</td>
-        <td style="color:var(--muted)">${s.label}</td>
-        <td>${s.size.toLocaleString()}</td>
-        <td style="color:var(--muted)">${s.floors[0]}–${s.floors[1]}</td>
-        <td><span class="avail-units units-col" data-id="${s.id}">${avail}</span></td>
+        <td style="color:var(--muted)">${s.lbl}</td>
+        <td>${s.sz.toLocaleString()}</td>
+        <td style="color:var(--muted);white-space:nowrap">${s.fl[0]}–${s.fl[1]}</td>
         <td>
-          <span class="auto-val"  data-id="${s.id}" style="display:${interestMode==='auto'?'block':'none'}">—</span>
-          <input type="number" class="interest-input manual-val" data-id="${s.id}"
-            min="0" placeholder="auto" style="display:${interestMode==='manual'?'block':'none'}">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="number" class="ii fl-min" data-id="${s.id}"
+              value="${s.fl[0]}" min="${s.fl[0]}" max="${s.fl[1]}"
+              style="width:52px!important" oninput="onStackFloorChange('${s.id}')">
+            <span style="font-size:10px;color:var(--muted)">–</span>
+            <input type="number" class="ii fl-max" data-id="${s.id}"
+              value="${s.fl[1]}" min="${s.fl[0]}" max="${s.fl[1]}"
+              style="width:52px!important" oninput="onStackFloorChange('${s.id}')">
+          </div>
+        </td>
+        <td><span class="avail-units${u===0?' avail-zero':''}" data-id="${s.id}">${u}</span></td>
+        <td>
+          <span class="auto-val" data-id="${s.id}" style="display:${iMode==='auto'?'block':'none'}">—</span>
+          <input type="number" class="ii" data-id="${s.id}" min="0" placeholder="auto"
+            style="display:${iMode==='manual'?'block':'none'}">
         </td>`;
       tbody.appendChild(tr);
     });
   });
 
-  updateAutoInterest();
+  refreshAutoVals();
+}
+
+function setGroup(type,checked){
+  document.querySelectorAll(`.scheck[data-type="${type}"]`).forEach(c=>c.checked=checked);
+  refreshAutoVals();
 }
 
 // ── INTEREST MODE ─────────────────────────────────────────────────────────────
-function setMode(mode){
-  interestMode=mode;
-  document.getElementById('modeAutoBtn').classList.toggle('active', mode==='auto');
-  document.getElementById('modeManualBtn').classList.toggle('active',mode==='manual');
-  document.getElementById('autoNote').classList.toggle('hidden',   mode!=='auto');
-  document.getElementById('manualNote').classList.toggle('hidden',  mode!=='manual');
-  document.getElementById('interestHeader').textContent=
-    mode==='auto'?'PN Interest (auto)':'PN Interest (manual)';
-  document.querySelectorAll('.auto-val').forEach(el=>el.style.display=mode==='auto'?'block':'none');
-  document.querySelectorAll('.manual-val').forEach(el=>el.style.display=mode==='manual'?'block':'none');
+function setMode(m){
+  iMode=m;
+  document.getElementById('modeAutoBtn').classList.toggle('active',m==='auto');
+  document.getElementById('modeManualBtn').classList.toggle('active',m==='manual');
+  document.getElementById('autoNote').classList.toggle('hidden',m!=='auto');
+  document.getElementById('manualNote').classList.toggle('hidden',m!=='manual');
+  document.getElementById('intHdr').textContent=m==='auto'?'PN Interest (auto)':'PN Interest (manual)';
+  document.querySelectorAll('.auto-val').forEach(el=>el.style.display=m==='auto'?'block':'none');
+  // Only toggle manual interest inputs in the stack table, not dropout inputs
+  document.querySelectorAll('#stackBody .ii').forEach(el=>el.style.display=m==='manual'?'block':'none');
 }
 
 // ── AUTO INTEREST ─────────────────────────────────────────────────────────────
-function updateAutoInterest(){
-  const pnQueue      = getPnQueue();
-  const selectedTypes= getSelectedTypes();
-  const selectedIds  = getSelectedStacks();
-
-  selectedTypes.forEach(type=>{
-    const pct        = TYPE_PCT[type]||0;
-    const pnForType  = Math.round(pnQueue*pct/100);
-    const allStacks  = STACKS.filter(s=>s.type===type);
-    // Denominator: avail units across ALL stacks of this type (selected or not)
-    const totalAvail = allStacks.reduce((sum,s)=>sum+availUnitsForStack(s),0);
-
-    allStacks.filter(s=>selectedIds.includes(s.id)).forEach(s=>{
-      const avail = availUnitsForStack(s);
-      const val   = totalAvail ? Math.round(pnForType*avail/totalAvail) : 0;
-      const el    = document.querySelector(`.auto-val[data-id="${s.id}"]`);
-      if(el) el.textContent=val;
+function refreshAutoVals(){
+  const pnQ=getPNQ();
+  selTypes().forEach(type=>{
+    const pct=PCT[type]||0;
+    const pnT=Math.round(pnQ*pct/100);
+    const all=STACKS.filter(s=>s.type===type);
+    const totAvail=all.reduce((n,s)=>n+availUnits(s),0);
+    all.forEach(s=>{
+      const el=document.querySelector(`.auto-val[data-id="${s.id}"]`);
+      if(!el) return;
+      const u=availUnits(s);
+      el.textContent=totAvail?Math.round(pnT*u/totAvail):0;
     });
   });
 }
 
 // ── DROPOUT ───────────────────────────────────────────────────────────────────
-let dropoutBands=[
-  {from:1,  to:100, pct:5},
-  {from:101,to:300, pct:20},
-  {from:301,to:9999,pct:40},
-];
+let bands=[{from:1,to:100,pct:5},{from:101,to:300,pct:20},{from:301,to:9999,pct:40}];
 
-function renderDropoutTable(){
+function renderBands(){
   const tbody=document.getElementById('dropoutBody');
   tbody.innerHTML='';
-  dropoutBands.forEach((b,i)=>{
+  bands.forEach((b,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td style="color:var(--muted);font-size:10px">Band ${i+1}</td>
-      <td><input type="number" class="interest-input dropout-from" value="${b.from}" min="1"
-        oninput="dropoutBands[${i}].from=+this.value"></td>
-      <td><input type="number" class="interest-input dropout-to" value="${b.to===9999?'':b.to}"
-        placeholder="∞" min="1" oninput="dropoutBands[${i}].to=+this.value||9999"></td>
-      <td><input type="number" class="interest-input dropout-pct" value="${b.pct}" min="0" max="100" step="1"
-        oninput="dropoutBands[${i}].pct=+this.value"></td>
-      <td><button class="del-btn" onclick="removeDropoutBand(${i})">✕</button></td>`;
+      <td><input type="number" class="ii dfi" value="${b.from}" min="1" oninput="bands[${i}].from=+this.value"></td>
+      <td><input type="number" class="ii dfi" value="${b.to===9999?'':b.to}" placeholder="∞" min="1" oninput="bands[${i}].to=+this.value||9999"></td>
+      <td><input type="number" class="ii dfi" value="${b.pct}" min="0" max="100" step="1" oninput="bands[${i}].pct=+this.value"></td>
+      <td><button class="del-btn" onclick="removeBand(${i})">✕</button></td>`;
     tbody.appendChild(tr);
   });
 }
-function addDropoutBand(){
-  const last=dropoutBands[dropoutBands.length-1];
-  dropoutBands.push({from:last?last.to+1:1,to:9999,pct:30});
-  renderDropoutTable();
+function addBand(){
+  const l=bands[bands.length-1];
+  bands.push({from:l?l.to+1:1,to:9999,pct:30});
+  renderBands();
 }
-function removeDropoutBand(i){
-  if(dropoutBands.length<=1) return;
-  dropoutBands.splice(i,1);
-  renderDropoutTable();
+function removeBand(i){
+  if(bands.length<=1) return;
+  bands.splice(i,1);
+  renderBands();
 }
-
-function applyDropout(queueAhead, totalCheque, pnQueue, pnInterest){
-  if(!totalCheque||!queueAhead) return 0;
-  let effTotal=0;
-  dropoutBands.forEach(b=>{
-    const s=Math.max(b.from,1), e=Math.min(b.to,queueAhead);
+function applyDropout(qAhead,totalCheque,pnQ,pnInt){
+  if(!totalCheque||!qAhead) return 0;
+  let eff=0;
+  bands.forEach(b=>{
+    const s=Math.max(b.from,1),e=Math.min(b.to,qAhead);
     if(e<s) return;
-    effTotal+=(e-s+1)*(1-b.pct/100);
+    eff+=(e-s+1)*(1-b.pct/100);
   });
-  return effTotal*(pnQueue/totalCheque)*(pnInterest/Math.max(pnQueue,1));
-}
-
-// ── VERDICT ───────────────────────────────────────────────────────────────────
-function vs(chance){
-  if(chance>=70) return{color:'#0891b2',label:'Very High',hBg:'#ecfbff',vBg:'rgba(8,145,178,.1)'};
-  if(chance>=50) return{color:'#0ca678',label:'Likely',   hBg:'#edfaf5',vBg:'rgba(12,166,120,.1)'};
-  if(chance>=30) return{color:'#e67700',label:'Moderate', hBg:'#fff8ec',vBg:'rgba(230,119,0,.1)'};
-  if(chance>0)   return{color:'#e03131',label:'Low',      hBg:'#fff0f0',vBg:'rgba(224,49,49,.1)'};
-  return              {color:'#e03131',label:'Very Low',  hBg:'#fff0f0',vBg:'rgba(224,49,49,.1)'};
+  return eff*(pnQ/totalCheque)*(pnInt/Math.max(pnQ,1));
 }
 
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
 function calculate(){
-  const totalCheque =+document.getElementById('totalCheque').value||0;
-  const pnCheque    =+document.getElementById('pnCheque').value||0;
-  const priority    =+document.getElementById('priority').value||0;
-  const bulk        =+document.getElementById('bulk').value||0;
-  const pnQueue     =Math.max(0,pnCheque-priority-bulk);
-  const clientQ     =+document.getElementById('queueNo').value||1;
-  const selTypes    =getSelectedTypes();
-  const selIds      =getSelectedStacks();
+  const totalCheque=+document.getElementById('totalCheque').value||0;
+  const pnCheque   =+document.getElementById('pnCheque').value||0;
+  const priority   =+document.getElementById('priority').value||0;
+  const bulk       =+document.getElementById('bulk').value||0;
+  const pnQ        =Math.max(0,pnCheque-priority-bulk);
+  const clientQ    =+document.getElementById('queueNo').value||1;
+  const types      =selTypes();
+  const ids        =checkedIds();
+    if(!types.length){ alert('Select at least one bedroom type.'); return; }
+  if(!ids.length)  { alert('Select at least one stack.'); return; }
 
-  if(!selTypes.length){ alert('Select at least one bedroom type.'); return; }
-  if(!selIds.length)  { alert('Select at least one stack.'); return; }
+  let totalUnits=0, pnInt=0;
+  const bd=[];
 
-  let totalUnits=0, pnInterestSelected=0;
-  const breakdown=[];
-
-  selTypes.forEach(type=>{
-    const pct       =TYPE_PCT[type]||0;
-    const pnForType =Math.round(pnQueue*pct/100);
-    const allStacks =STACKS.filter(s=>s.type===type);
-    const typeDef   =TYPE_DEFS.find(t=>t.key===type);
-    const totalAvail=allStacks.reduce((sum,s)=>sum+availUnitsForStack(s),0);
-
-    let typeUnits=0, typeInterest=0;
-    allStacks.filter(s=>selIds.includes(s.id)).forEach(s=>{
-      const avail=availUnitsForStack(s);
-      typeUnits+=avail;
+  types.forEach(type=>{
+    const pct   =PCT[type]||0;
+    const pnT   =Math.round(pnQ*pct/100);
+    const all   =STACKS.filter(s=>s.type===type);
+    const totAv =all.reduce((n,s)=>n+availUnits(s),0);
+    const tDef  =TYPES.find(t=>t.k===type);
+    let tu=0,ti=0;
+    all.filter(s=>ids.includes(s.id)).forEach(s=>{
+      const u=availUnits(s);
+      tu+=u;
       let interest;
-      if(interestMode==='manual'){
-        const inp=document.querySelector(`.manual-val[data-id="${s.id}"]`);
+      if(iMode==='manual'){
+        const inp=document.querySelector(`.ii[data-id="${s.id}"]`);
         const m=inp?+inp.value:0;
-        interest=m>0?m:(totalAvail?Math.round(pnForType*avail/totalAvail):0);
+        interest=m>0?m:(totAv?Math.round(pnT*u/totAv):0);
       } else {
-        interest=totalAvail?Math.round(pnForType*avail/totalAvail):0;
+        interest=totAv?Math.round(pnT*u/totAv):0;
       }
-      typeInterest+=interest;
+      ti+=interest;
     });
-
-    if(typeUnits>0){
-      totalUnits+=typeUnits;
-      pnInterestSelected+=typeInterest;
-      breakdown.push({label:typeDef.label,units:typeUnits,interest:typeInterest,pct});
-    }
+    if(tu>0){ totalUnits+=tu; pnInt+=ti; bd.push({n:tDef.n,u:tu,i:ti,pct}); }
   });
 
   if(!totalUnits){ alert('No available units for selected stacks / floor range.'); return; }
 
-  const queueAhead  =Math.max(0,clientQ-1);
-  const rawComp     =queueAhead*(pnQueue/Math.max(totalCheque,1))*(pnInterestSelected/Math.max(pnQueue,1));
-  const effComp     =Math.round(applyDropout(queueAhead,totalCheque,pnQueue,pnInterestSelected));
-  const consumed    =Math.min(effComp,totalUnits);
-  const unitsLeft   =Math.max(0,totalUnits-consumed);
-  const chance      =Math.min(100,totalUnits>0?(unitsLeft/totalUnits)*100:0);
-  const v           =vs(chance);
-  const minF        =+document.getElementById('minFloor').value||1;
+  const qAhead  =Math.max(0,clientQ-1);
+  const rawComp =qAhead*(pnQ/Math.max(totalCheque,1))*(pnInt/Math.max(pnQ,1));
+  const effComp =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnInt));
+  const consumed=Math.min(effComp,totalUnits);
+  const left    =Math.max(0,totalUnits-consumed);
+  const chance  =Math.min(100,totalUnits>0?(left/totalUnits)*100:0);
+  const v       =verdict(chance);
 
-  // Hero
-  const hero=document.getElementById('resultHero');
-  hero.style.background=v.hBg; hero.style.borderColor=v.color+'44';
-  const pctEl=document.getElementById('resultPct');
-  pctEl.textContent=chance.toFixed(1)+'%'; pctEl.style.color=v.color;
-  const vEl=document.getElementById('resultVerdict');
-  vEl.textContent=v.label; vEl.style.background=v.vBg; vEl.style.color=v.color;
+  const hero=document.getElementById('resHero');
+  hero.style.background=v.hb; hero.style.borderColor=v.c+'44';
+  const pe=document.getElementById('resPct');
+  pe.textContent=chance.toFixed(1)+'%'; pe.style.color=v.c;
+  const ve=document.getElementById('resVerdict');
+  ve.textContent=v.l; ve.style.background=v.vb; ve.style.color=v.c;
 
-  document.getElementById('statPNQueue').textContent  =pnQueue.toLocaleString();
-  document.getElementById('statBefore').textContent   =effComp.toLocaleString();
-  document.getElementById('statUnitsLeft').textContent=unitsLeft+' / '+totalUnits;
+  document.getElementById('sPNQ').textContent=pnQ.toLocaleString();
+  document.getElementById('sBef').textContent=effComp.toLocaleString();
+  document.getElementById('sUL').textContent =left+' / '+totalUnits;
 
-  let bdHtml=`
+  let html=`
     <li><span>Total Cheques</span><span>${totalCheque.toLocaleString()}</span></li>
     <li><span>PN Cheques</span><span>${pnCheque.toLocaleString()} (${(pnCheque/totalCheque*100).toFixed(1)}%)</span></li>
-    <li><span>PN Queue (after Priority + Bulk/Developer)</span><span>${pnQueue.toLocaleString()}</span></li>
-    <li><span>Client minimum floor preference</span><span>Floor ${minF} and above</span></li>`;
-  breakdown.forEach(t=>{
-    bdHtml+=`<li><span>↳ ${t.label} — ${t.pct.toFixed(2)}% of PN</span><span>${t.interest} PN buyers · ${t.units} avail. units</span></li>`;
-  });
-  bdHtml+=`
-    <li><span>Combined PN interest (selected stacks)</span><span>${pnInterestSelected.toLocaleString()}</span></li>
+    <li><span>PN Queue (after Priority + Bulk/Dev)</span><span>${pnQ.toLocaleString()}</span></li>
+    <li><span>Client floor preference</span><span>Per stack (see table)</span></li>`;
+  bd.forEach(t=>{ html+=`<li><span>↳ ${t.n} — ${t.pct.toFixed(2)}% of PN</span><span>${t.i} PN buyers · ${t.u} avail. units</span></li>`; });
+  html+=`
+    <li><span>Combined PN interest (selected stacks)</span><span>${pnInt.toLocaleString()}</span></li>
     <li><span>Client queue #</span><span>${clientQ}</span></li>
-    <li><span>All buyers before client</span><span>${queueAhead.toLocaleString()}</span></li>
+    <li><span>All buyers before client</span><span>${qAhead.toLocaleString()}</span></li>
     <li><span>Raw PN competitors (no dropout)</span><span>${Math.round(rawComp).toLocaleString()}</span></li>
     <li><span>Effective PN competitors (after dropout)</span><span>${effComp.toLocaleString()}</span></li>
-    <li><span>Total available units in selected stacks</span><span>${totalUnits}</span></li>
+    <li><span>Total available units</span><span>${totalUnits}</span></li>
     <li><span>Est. units consumed before client</span><span>${consumed}</span></li>
-    <li><span>Est. units remaining</span><span>${unitsLeft}</span></li>`;
+    <li><span>Est. units remaining</span><span>${left}</span></li>`;
+  document.getElementById('bdList').innerHTML=html;
 
-  document.getElementById('breakdownList').innerHTML=bdHtml;
-  buildSensitivity(pnQueue,pnInterestSelected,totalUnits,clientQ,totalCheque);
-  document.getElementById('resultsSection').classList.remove('hidden');
+  buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque);
+  document.getElementById('resSection').classList.remove('hidden');
   document.getElementById('sensSection').classList.remove('hidden');
-  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('resSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ── SENSITIVITY ───────────────────────────────────────────────────────────────
-function buildSensitivity(pnQueue,pnInterest,totalUnits,clientQ,totalCheque){
+function buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque){
   const tbody=document.getElementById('sensBody');
   tbody.innerHTML='';
   const step=50;
   const start=Math.max(1,Math.floor(Math.max(1,clientQ-200)/step)*step);
-  const end=clientQ+200;
-  for(let q=start;q<=end;q+=step){
+  for(let q=start;q<=clientQ+200;q+=step){
     const qA  =Math.max(0,q-1);
-    const comp=Math.round(applyDropout(qA,totalCheque,pnQueue,pnInterest));
+    const comp=Math.round(applyDropout(qA,totalCheque,pnQ,pnInt));
     const left=Math.max(0,totalUnits-Math.min(comp,totalUnits));
     const pct =totalUnits>0?Math.min(100,(left/totalUnits)*100):0;
-    const v   =vs(pct);
+    const v   =verdict(pct);
     const isC =q===clientQ;
     const tr  =document.createElement('tr');
-    if(isC) tr.classList.add('highlight');
+    if(isC) tr.classList.add('hl');
     tr.innerHTML=`
       <td style="color:${isC?'var(--accent)':'var(--text)'};font-weight:${isC?600:400}">
-        ${q}${isC?' <span style="font-size:9px;opacity:.65"> ← your client</span>':''}
+        ${q}${isC?' <span style="font-size:9px;opacity:.6"> ← your client</span>':''}
       </td>
       <td style="color:var(--muted)">${comp}</td>
       <td>${left} <span style="color:var(--muted)">/ ${totalUnits}</span></td>
-      <td style="color:${v.color};font-weight:600">${pct.toFixed(1)}%</td>
-      <td>
-        <div class="prob-bar-wrap">
-          <div class="prob-bar" style="width:${Math.max(2,pct).toFixed(0)}px;background:${v.color};opacity:.65"></div>
-          <span style="color:${v.color};font-size:10px">${v.label}</span>
-        </div>
-      </td>`;
+      <td style="color:${v.c};font-weight:600">${pct.toFixed(1)}%</td>
+      <td><div class="pb-wrap">
+        <div class="pb" style="width:${Math.max(2,pct).toFixed(0)}px;background:${v.c};opacity:.65"></div>
+        <span style="color:${v.c};font-size:10px">${v.l}</span>
+      </div></td>`;
     tbody.appendChild(tr);
   }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-document.getElementById('totalCheque').addEventListener('input',()=>{syncShare();});
-document.getElementById('pnCheque').addEventListener('input',  ()=>{syncShare();});
-document.getElementById('pnShare').addEventListener('input',   ()=>{syncCheque();});
-document.getElementById('priority').addEventListener('input',  ()=>updateAutoInterest());
-document.getElementById('bulk').addEventListener('input',      ()=>updateAutoInterest());
+document.getElementById('totalCheque').addEventListener('input',()=>syncShare());
+document.getElementById('pnCheque').addEventListener('input',  ()=>syncShare());
+document.getElementById('pnShare').addEventListener('input',   ()=>syncCheque());
+document.getElementById('priority').addEventListener('input',  ()=>refreshAutoVals());
+document.getElementById('bulk').addEventListener('input',      ()=>refreshAutoVals());
 
 syncCheque();
 buildTypeChips();
-renderDropoutTable();
+renderBands();
+setMode('auto');
 </script>
 </body>
 </html>
