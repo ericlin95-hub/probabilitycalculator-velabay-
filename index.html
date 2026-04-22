@@ -222,7 +222,7 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
     </div>
     <div class="stats-grid">
       <div class="stat-box"><div class="stat-val" id="sPNQ">—</div><div class="stat-key">PN Queue</div></div>
-      <div class="stat-box"><div class="stat-val" id="sBef">—</div><div class="stat-key">Eff. Competitors</div></div>
+      <div class="stat-box"><div class="stat-val" id="sBef">—</div><div class="stat-key">All-Agency Competitors</div></div>
       <div class="stat-box"><div class="stat-val" id="sUL">—</div><div class="stat-key">Units Left (est.)</div></div>
     </div>
     <ul class="breakdown" id="bdList"></ul>
@@ -473,13 +473,20 @@ function removeBand(i){
 }
 function applyDropout(qAhead,totalCheque,pnQ,pnInt){
   if(!totalCheque||!qAhead) return 0;
-  let eff=0;
+  // Step 1: apply dropout to ALL buyers ahead across all agencies
+  let effAllBuyers=0;
   bands.forEach(b=>{
     const s=Math.max(b.from,1),e=Math.min(b.to,qAhead);
     if(e<s) return;
-    eff+=(e-s+1)*(1-b.pct/100);
+    effAllBuyers+=(e-s+1)*(1-b.pct/100);
   });
-  return eff*(pnQ/totalCheque)*(pnInt/Math.max(pnQ,1));
+  // Step 2: pnInt is a PN-specific headcount. Convert to total market interest
+  // by dividing by PN share, then express as a fraction of all cheques.
+  // This gives the proportion of ALL buyers interested in these stacks.
+  const pnShare = pnQ / Math.max(totalCheque, 1);
+  const totalMarketInterest = pnInt / Math.max(pnShare, 0.01);
+  const marketInterestRate = totalMarketInterest / totalCheque;
+  return effAllBuyers * marketInterestRate;
 }
 
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
@@ -529,7 +536,10 @@ function calculate(){
   if(!totalUnits){ alert('No available units for selected stacks / floor range.'); return; }
 
   const qAhead  =Math.max(0,clientQ-1);
-  const rawComp =qAhead*(pnQ/Math.max(totalCheque,1))*(pnInt/Math.max(pnQ,1));
+  // rawComp: of all buyers ahead, what fraction are interested (all agencies)?
+  const pnShareCalc = pnQ / Math.max(totalCheque, 1);
+  const totalMktInterest = pnInt / Math.max(pnShareCalc, 0.01);
+  const rawComp = qAhead * (totalMktInterest / totalCheque);
   const effComp =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnInt));
   const consumed=Math.min(effComp,totalUnits);
   const left    =Math.max(0,totalUnits-consumed);
@@ -557,8 +567,8 @@ function calculate(){
     <li><span>Combined PN interest (selected stacks)</span><span>${pnInt.toLocaleString()}</span></li>
     <li><span>Client queue #</span><span>${clientQ}</span></li>
     <li><span>All buyers before client</span><span>${qAhead.toLocaleString()}</span></li>
-    <li><span>Raw PN competitors (no dropout)</span><span>${Math.round(rawComp).toLocaleString()}</span></li>
-    <li><span>Effective PN competitors (after dropout)</span><span>${effComp.toLocaleString()}</span></li>
+    <li><span>Raw competitors — all agencies (no dropout)</span><span>${Math.round(rawComp).toLocaleString()}</span></li>
+    <li><span>Effective competitors — all agencies (after dropout)</span><span>${effComp.toLocaleString()}</span></li>
     <li><span>Total available units</span><span>${totalUnits}</span></li>
     <li><span>Est. units consumed before client</span><span>${consumed}</span></li>
     <li><span>Est. units remaining</span><span>${left}</span></li>`;
