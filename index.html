@@ -112,6 +112,26 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
 .note{font-size:10px;color:var(--muted);padding:10px 14px;background:var(--al);border-radius:7px;border-left:3px solid var(--accent);line-height:1.7}
 .empty-state{text-align:center;padding:20px;color:var(--muted);font-size:11px;letter-spacing:.06em}
 .dfi{width:70px!important}
+
+/* Story layout */
+.story{display:flex;flex-direction:column;gap:0}
+.story-step{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--surface2)}
+.story-step:last-child{border-bottom:none}
+.story-step-danger .story-step-num{background:#e03131}
+.story-step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.story-step-body{flex:1;min-width:0}
+.story-step-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.story-step-body p{font-size:12px;color:var(--muted);line-height:1.7}
+.story-step-body p strong{color:var(--text)}
+.story-step-sub{font-size:11px;color:var(--muted);padding:4px 0 4px 12px;border-left:2px solid var(--border);margin:4px 0;line-height:1.5}
+.story-step-sub strong{color:var(--text)}
+.story-formula{font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:10px 0;color:var(--text);line-height:1.6}
+.story-formula strong{color:var(--accent)}
+.story-stack-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--surface2);flex-wrap:wrap}
+.story-stack-row:last-child{border-bottom:none}
+.story-stack-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;background:var(--al);color:var(--accent);font-weight:600;white-space:nowrap}
+.story-stack-detail{font-size:11px;color:var(--muted)}
+.story-stack-detail strong{color:var(--text)}
 </style>
 </head>
 <body>
@@ -130,12 +150,12 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
   <div class="card">
     <div class="ct">Market Data</div>
     <div class="ir">
-      <div class="ig"><label>Total Cheques</label><input type="number" id="totalCheque" value="1000" min="1"></div>
-      <div class="ig"><label>PN Cheques</label><input type="number" id="pnCheque" value="470" min="1" oninput="syncShare()"></div>
+      <div class="ig"><label>Total Cheques</label><input type="number" id="totalCheque" value="962" min="1"></div>
+      <div class="ig"><label>PN Cheques</label><input type="number" id="pnCheque" value="519" min="1" oninput="syncShare()"></div>
     </div>
     <div class="ig">
-      <label>PN Market Share % <span class="share-pill" id="shareDisplay">47.0%</span></label>
-      <input type="number" id="pnShare" value="47" min="1" max="100" step="0.1" oninput="syncCheque()">
+      <label>PN Market Share % <span class="share-pill" id="shareDisplay">54.0%</span></label>
+      <input type="number" id="pnShare" value="54.0" min="1" max="100" step="0.1" oninput="syncCheque()">
     </div>
     <div class="divider"></div>
     <div class="ir">
@@ -215,29 +235,31 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
   <!-- Results -->
   <div class="card full hidden" id="resSection">
     <div class="ct">Result</div>
+
+    <!-- Big number -->
     <div class="result-hero" id="resHero">
       <div class="rpct" id="resPct">—</div>
       <div class="rlbl">Estimated chance of securing a unit</div>
       <div class="rverdict" id="resVerdict"></div>
     </div>
-    <div class="stats-grid">
-      <div class="stat-box"><div class="stat-val" id="sPNQ">—</div><div class="stat-key">PN Queue</div></div>
-      <div class="stat-box"><div class="stat-val" id="sBef">—</div><div class="stat-key">All-Agency Competitors</div></div>
-      <div class="stat-box"><div class="stat-val" id="sUL">—</div><div class="stat-key">Units Left (est.)</div></div>
-    </div>
-    <ul class="breakdown" id="bdList"></ul>
+
+    <!-- Plain English story -->
+    <div class="story" id="storyBox"></div>
   </div>
 
   <!-- Sensitivity -->
   <div class="card full hidden" id="sensSection">
-    <div class="ct">Sensitivity — Chance by Queue Number</div>
+    <div class="ct">How Does Queue Position Affect the Odds?</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      This table shows what your client's chances would be at different queue numbers, so you can set realistic expectations based on where they actually land.
+    </p>
     <div style="overflow-x:auto">
       <table class="sens-table">
-        <thead><tr><th>Queue #</th><th>Eff. Competitors</th><th>Est. Units Left</th><th>Chance %</th><th style="width:200px">Likelihood</th></tr></thead>
+        <thead><tr><th>Queue #</th><th>Est. Competing Buyers</th><th>Units Still Available</th><th>Chance</th><th style="width:180px">Verdict</th></tr></thead>
         <tbody id="sensBody"></tbody>
       </table>
     </div>
-    <div style="margin-top:14px" class="note">±200 queue positions around your client, steps of 50.</div>
+    <div style="margin-top:14px" class="note">Showing ±200 queue positions around your client in steps of 50. Dropout rates applied throughout.</div>
   </div>
 
 </div>
@@ -546,6 +568,7 @@ function calculate(){
   const chance  =Math.min(100,totalUnits>0?(left/totalUnits)*100:0);
   const v       =verdict(chance);
 
+  // Hero
   const hero=document.getElementById('resHero');
   hero.style.background=v.hb; hero.style.borderColor=v.c+'44';
   const pe=document.getElementById('resPct');
@@ -553,26 +576,98 @@ function calculate(){
   const ve=document.getElementById('resVerdict');
   ve.textContent=v.l; ve.style.background=v.vb; ve.style.color=v.c;
 
-  document.getElementById('sPNQ').textContent=pnQ.toLocaleString();
-  document.getElementById('sBef').textContent=effComp.toLocaleString();
-  document.getElementById('sUL').textContent =left+' / '+totalUnits;
+  // Build plain-English story
+  const stackNames = ids.map(id=>'Stack '+id).join(', ');
+  const typeNames  = bd.map(t=>t.n).join(' + ');
+  const pnSharePct = (pnQ/Math.max(totalCheque,1)*100).toFixed(1);
+  const totalMktIntDisplay = Math.round(totalMktInterest);
+  const rawCompDisplay = Math.round(rawComp);
 
-  let html=`
-    <li><span>Total Cheques</span><span>${totalCheque.toLocaleString()}</span></li>
-    <li><span>PN Cheques</span><span>${pnCheque.toLocaleString()} (${(pnCheque/totalCheque*100).toFixed(1)}%)</span></li>
-    <li><span>PN Queue (after Priority + Bulk/Dev)</span><span>${pnQ.toLocaleString()}</span></li>
-    <li><span>Client floor preference</span><span>Per stack (see table)</span></li>`;
-  bd.forEach(t=>{ html+=`<li><span>↳ ${t.n} — ${t.pct.toFixed(2)}% of PN</span><span>${t.i} PN buyers · ${t.u} avail. units</span></li>`; });
-  html+=`
-    <li><span>Combined PN interest (selected stacks)</span><span>${pnInt.toLocaleString()}</span></li>
-    <li><span>Client queue #</span><span>${clientQ}</span></li>
-    <li><span>All buyers before client</span><span>${qAhead.toLocaleString()}</span></li>
-    <li><span>Raw competitors — all agencies (no dropout)</span><span>${Math.round(rawComp).toLocaleString()}</span></li>
-    <li><span>Effective competitors — all agencies (after dropout)</span><span>${effComp.toLocaleString()}</span></li>
-    <li><span>Total available units</span><span>${totalUnits}</span></li>
-    <li><span>Est. units consumed before client</span><span>${consumed}</span></li>
-    <li><span>Est. units remaining</span><span>${left}</span></li>`;
-  document.getElementById('bdList').innerHTML=html;
+  // Per stack interest lines
+  let stackLines = '';
+  ids.forEach(id=>{
+    const s=STACKS.find(x=>x.id===id);
+    if(!s) return;
+    const totalStkFloors=s.fl[1]-s.fl[0]+1;
+    const avail=availUnits(s);
+    const scaledPni=totalStkFloors>0?Math.round(s.pni*avail/totalStkFloors):s.pni;
+    const manualInp=document.querySelector(`.ii[data-id="${id}"]`);
+    const manualVal=manualInp?+manualInp.value:0;
+    const usedPni=iMode==='manual'&&manualVal>0?manualVal:scaledPni;
+    stackLines+='<div class="story-stack-row">'
+      +'<span class="story-stack-badge">Stack '+id+'</span>'
+      +'<span class="story-stack-detail">'+s.lbl+' · '+avail+' unit'+(avail!==1?'s':'')+' available · <strong>'+usedPni+' PN buyers</strong> interested</span>'
+      +'</div>';
+  });
+
+  // Dropout breakdown sentence
+  let dropoutLines='';
+  let runningQ=0;
+  bands.forEach((b,i)=>{
+    const bandEnd=Math.min(b.to===9999?qAhead:b.to, qAhead);
+    const bandStart=Math.max(b.from,1);
+    if(bandEnd<bandStart) return;
+    const count=bandEnd-bandStart+1;
+    const kept=Math.round(count*(1-b.pct/100));
+    dropoutLines+='<div class="story-step-sub">Q'+bandStart+'–Q'+bandEnd+': '+count+' buyers, '+b.pct+'% drop out → <strong>'+kept+' stay</strong></div>';
+  });
+
+  document.getElementById('storyBox').innerHTML=`
+    <div class="story-step">
+      <div class="story-step-num">1</div>
+      <div class="story-step-body">
+        <div class="story-step-title">Who is ahead of your client?</div>
+        <p>Your client is <strong>Queue ${clientQ}</strong>. That means <strong>${qAhead} people</strong> go before them — from all agencies combined.</p>
+      </div>
+    </div>
+
+    <div class="story-step">
+      <div class="story-step-num">2</div>
+      <div class="story-step-body">
+        <div class="story-step-title">Not everyone shows up — applying dropout</div>
+        <p>Like restaurant reservations, some buyers won't follow through on launch day. After applying your dropout rates:</p>
+        ${dropoutLines}
+        <p style="margin-top:8px">Out of ${qAhead} buyers ahead, roughly <strong>${effComp} are real, committed competitors</strong> for your client's unit type.</p>
+      </div>
+    </div>
+
+    <div class="story-step">
+      <div class="story-step-num">3</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many of those want the same stacks?</div>
+        <p>From the PropNex heatmap, the total PN interest across the selected stacks is <strong>${pnInt} PN buyers</strong>. Since PropNex holds <strong>${pnSharePct}%</strong> of the market, the estimated total interest across all agencies is:</p>
+        <div class="story-formula">${pnInt} PN buyers ÷ ${pnSharePct}% = <strong>${totalMktIntDisplay} total buyers</strong> interested in these stacks</div>
+        <p style="margin-top:8px">That's <strong>${(totalMktInterest/totalCheque*100).toFixed(1)}%</strong> of all ${totalCheque} cheques. Applied to the ${effComp} effective buyers ahead → <strong>${consumed} of them likely want the same units.</strong></p>
+        <div style="margin-top:10px">${stackLines}</div>
+      </div>
+    </div>
+
+    <div class="story-step">
+      <div class="story-step-num">4</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many units are available?</div>
+        <p>Across the selected stacks with your client's floor preference, there are <strong>${totalUnits} available units</strong>.</p>
+      </div>
+    </div>
+
+    <div class="story-step${left<=0?' story-step-danger':''}">
+      <div class="story-step-num">5</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many units are left when your client's turn comes?</div>
+        <p><strong>${totalUnits} units</strong> minus <strong>${consumed} taken</strong> by buyers ahead = <strong style="color:${v.c}">${left} unit${left!==1?'s':''} remaining</strong> when your client reaches the counter.</p>
+        ${left<=0?'<p style="margin-top:8px;color:#e03131;font-weight:500">⚠ At this queue position, the selected units are likely fully sold out before your client\'s turn.</p>':''}
+      </div>
+    </div>
+
+    <div class="story-step">
+      <div class="story-step-num">6</div>
+      <div class="story-step-body">
+        <div class="story-step-title">The probability</div>
+        <p><strong>${left} remaining</strong> ÷ <strong>${totalUnits} total units</strong> = <strong style="color:${v.c}">${chance.toFixed(1)}% chance</strong> of securing a unit at Queue ${clientQ}.</p>
+        <p style="margin-top:6px;color:var(--muted);font-size:10px">Think of it like a bus with ${totalUnits} seats. ${consumed} people board before your client. There are likely <strong>${left} seats</strong> still free when they get on.</p>
+      </div>
+    </div>
+  `;
 
   buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque);
   document.getElementById('resSection').classList.remove('hidden');
