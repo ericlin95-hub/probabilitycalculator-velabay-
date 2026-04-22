@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vela Bay — Unit Booking Probability</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface2: #f0f3fa;
+    --border: #dde2ef;
+    --accent: #3b5bdb;
+    --accent-light: #eef1fd;
+    --text: #1c2340;
+    --muted: #8492b0;
+    --shadow: 0 1px 3px rgba(28,35,64,0.07), 0 4px 16px rgba(28,35,64,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 32px 16px 72px; }
+
+  .header { max-width: 960px; margin: 0 auto 28px; }
+  .header-inner { background: var(--accent); border-radius: 16px; padding: 26px 32px; position: relative; overflow: hidden; }
+  .header-inner::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.06); }
+  .header-inner::after  { content:''; position:absolute; bottom:-60px; right:80px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .header-tag  { font-size:10px; letter-spacing:0.22em; color:rgba(255,255,255,0.5); text-transform:uppercase; margin-bottom:8px; }
+  .header h1   { font-family:'Syne',sans-serif; font-size:clamp(24px,5vw,42px); font-weight:800; color:#fff; letter-spacing:-0.02em; line-height:1; }
+  .header h1 span { color:rgba(255,255,255,0.48); font-weight:400; }
+  .header-sub  { font-size:11px; color:rgba(255,255,255,0.42); margin-top:8px; letter-spacing:0.04em; }
+
+  .layout { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width:640px) { .layout { grid-template-columns:1fr; } }
+  .full { grid-column: 1 / -1; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:var(--shadow); }
+  .card-title { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .card-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  label { display:block; font-size:10px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  input[type=number] {
+    width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:'DM Mono',monospace; font-size:13px; padding:9px 12px;
+    outline:none; transition:border-color 0.15s, box-shadow 0.15s; appearance:none; -webkit-appearance:none;
+  }
+  input[type=number]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,91,219,0.1); }
+  .input-row  { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .input-group { margin-bottom:14px; }
+  .divider { height:1px; background:var(--border); margin:14px 0; }
+
+  /* Type selector chips */
+  .type-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .type-chip { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; border:1.5px solid var(--border); background:var(--surface2); cursor:pointer; user-select:none; transition:all 0.15s; }
+  .type-chip:hover { border-color:var(--accent); background:var(--accent-light); }
+  .type-chip.active { border-color:var(--accent); background:var(--accent-light); }
+  .type-chip input[type=checkbox] { display:none; }
+  .type-chip-label { font-size:10px; letter-spacing:0.04em; color:var(--text); }
+  .type-chip-size  { font-size:9px; color:var(--muted); }
+  .type-chip.active .type-chip-label { color:var(--accent); font-weight:500; }
+
+  /* Stack table */
+  .stack-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .stack-table th { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); text-align:left; padding:7px 10px; border-bottom:1.5px solid var(--border); background:var(--surface2); white-space:nowrap; }
+  .stack-table td { padding:8px 10px; border-bottom:1px solid var(--surface2); vertical-align:middle; }
+  .stack-table tr:last-child td { border-bottom:none; }
+  .stack-table tr:hover td { background:var(--accent-light); }
+  .type-group-header td { background:var(--surface2) !important; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); padding:5px 10px; font-weight:500; }
+  .stack-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; background:var(--accent-light); color:var(--accent); font-weight:500; }
+  .stack-check { accent-color:var(--accent); width:14px; height:14px; cursor:pointer; }
+  .interest-input { padding:5px 8px !important; font-size:11px !important; width:72px !important; }
+  .auto-val { color:var(--accent); font-size:11px; font-weight:500; }
+  .manual-val { display:none; }
+
+  /* Interest mode toggle */
+  .mode-row { display:flex; gap:8px; margin-bottom:16px; }
+  .mode-btn { flex:1; padding:8px; border:1.5px solid var(--border); background:var(--surface2); border-radius:8px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all 0.15s; text-align:center; }
+  .mode-btn.active { border-color:var(--accent); background:var(--accent-light); color:var(--accent); font-weight:500; }
+
+  .btn { width:100%; padding:15px; background:var(--accent); color:#fff; font-family:'Syne',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; border:none; border-radius:10px; cursor:pointer; transition:background 0.15s,transform 0.1s,box-shadow 0.15s; box-shadow:0 4px 14px rgba(59,91,219,0.28); }
+  .btn:hover { background:#2f4ec7; transform:translateY(-1px); box-shadow:0 6px 20px rgba(59,91,219,0.38); }
+  .btn:active { transform:translateY(0); }
+
+  .result-hero { text-align:center; padding:28px 16px 22px; border-radius:12px; margin-bottom:16px; border:1px solid var(--border); }
+  .result-percent { font-family:'Syne',sans-serif; font-size:72px; font-weight:800; line-height:1; letter-spacing:-0.03em; }
+  .result-label { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+  .result-verdict { display:inline-block; margin-top:14px; padding:5px 16px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  .stat-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 12px; text-align:center; }
+  .stat-val { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:var(--accent); }
+  .stat-key { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+
+  .sens-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .sens-table th { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); padding:7px 10px; text-align:left; border-bottom:1.5px solid var(--border); background:var(--surface2); }
+  .sens-table td { padding:9px 10px; border-bottom:1px solid var(--surface2); }
+  .sens-table tr.highlight td { background:var(--accent-light); }
+  .prob-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .prob-bar { height:6px; border-radius:3px; flex-shrink:0; min-width:2px; }
+
+  .breakdown { list-style:none; font-size:11px; }
+  .breakdown li { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--surface2); color:var(--muted); }
+  .breakdown li:last-child { border-bottom:none; }
+  .breakdown li span:last-child { color:var(--text); font-weight:500; }
+
+  .hidden { display:none; }
+  .note { font-size:10px; color:var(--muted); padding:10px 14px; background:var(--accent-light); border-radius:7px; border-left:3px solid var(--accent); line-height:1.7; letter-spacing:0.02em; }
+  .share-pill { display:inline-block; padding:1px 8px; background:var(--accent-light); color:var(--accent); border-radius:10px; font-size:11px; font-weight:500; margin-left:6px; }
+  .empty-state { text-align:center; padding:24px; color:var(--muted); font-size:11px; letter-spacing:0.06em; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-tag">PropNex · New Launch Analytics</div>
+    <h1>Vela Bay <span>/ Probability Calculator</span></h1>
+    <div class="header-sub">515 units · 1 &amp; 3 Bayshore Walk · Queue booking chance estimator</div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- Market Data -->
+  <div class="card">
+    <div class="card-title">Market Data</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Total Cheques</label>
+        <input type="number" id="totalCheque" value="1000" min="1">
+      </div>
+      <div class="input-group">
+        <label>PN Cheques</label>
+        <input type="number" id="pnCheque" value="470" min="1" oninput="syncShare()">
+      </div>
+    </div>
+    <div class="input-group">
+      <label>PN Market Share % <span class="share-pill" id="shareDisplay">47.0%</span></label>
+      <input type="number" id="pnShare" value="47" min="1" max="100" step="0.1" oninput="syncCheque()">
+    </div>
+    <div class="divider"></div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Priority / VIP</label>
+        <input type="number" id="priority" value="0" min="0">
+      </div>
+      <div class="input-group">
+        <label>Bulk / Developer</label>
+        <input type="number" id="bulk" value="0" min="0">
+      </div>
+    </div>
+    <div class="note">PN Queue = PN Cheques − Priority / VIP − Bulk / Developer</div>
+  </div>
+
+  <!-- Client Setup -->
+  <div class="card">
+    <div class="card-title">Client Setup</div>
+    <div class="input-group">
+      <label>Client Queue Number</label>
+      <input type="number" id="queueNo" value="200" min="1">
+    </div>
+    <div class="input-group">
+      <label>Select Bedroom Type(s) — pick all that apply</label>
+      <div class="type-grid" id="typeGrid"></div>
+    </div>
+  </div>
+
+  <!-- Stack Selection & PN Interest -->
+  <div class="card full">
+    <div class="card-title">Stack Selection &amp; PN Interest</div>
+
+    <div class="mode-row">
+      <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Auto spread</div>
+      <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual per stack</div>
+    </div>
+
+    <div id="autoNote" class="note" style="margin-bottom:14px">
+      PN interest per stack is estimated proportionally from each type's unit mix %. Toggle to Manual to override individual stacks.
+    </div>
+    <div id="manualNote" class="note hidden" style="margin-bottom:14px">
+      Enter exact PN interest count per stack. Leave blank to fall back to auto estimate for that stack.
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="stack-table">
+        <thead>
+          <tr>
+            <th>Include</th>
+            <th>Stack</th>
+            <th>Block</th>
+            <th>Type</th>
+            <th>Size (sqft)</th>
+            <th>Floors</th>
+            <th>Units</th>
+            <th id="interestHeader">PN Interest (auto)</th>
+          </tr>
+        </thead>
+        <tbody id="stackBody">
+          <tr><td colspan="8" class="empty-state">Select at least one bedroom type above</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Calculate -->
+  <div class="card full">
+    <button class="btn" onclick="calculate()">Calculate Probability</button>
+  </div>
+
+  <!-- Results -->
+  <div class="card full hidden" id="resultsSection">
+    <div class="card-title">Result</div>
+    <div class="result-hero" id="resultHero">
+      <div class="result-percent" id="resultPct">—</div>
+      <div class="result-label">Estimated chance of securing a unit</div>
+      <div class="result-verdict" id="resultVerdict"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val" id="statPNQueue">—</div><div class="stat-key">PN Queue</div></div>
+      <div class="stat-box"><div class="stat-val" id="statBefore">—</div><div class="stat-key">Competitors Before</div></div>
+      <div class="stat-box"><div class="stat-val" id="statUnitsLeft">—</div><div class="stat-key">Units Left (est.)</div></div>
+    </div>
+    <ul class="breakdown" id="breakdownList"></ul>
+  </div>
+
+  <!-- Sensitivity -->
+  <div class="card full hidden" id="sensSection">
+    <div class="card-title">Sensitivity — Chance by Queue Number</div>
+    <div style="overflow-x:auto">
+      <table class="sens-table">
+        <thead>
+          <tr>
+            <th>Queue #</th><th>Competitors Before</th><th>Est. Units Left</th><th>Chance %</th><th style="width:200px">Likelihood</th>
+          </tr>
+        </thead>
+        <tbody id="sensBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px" class="note">Sensitivity shown for ±200 queue positions around your client, in steps of 50.</div>
+  </div>
+
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const STACKS = [
+  { id:'01', block:1, type:'3BRP',  typeLabel:'3BR Premium',   size:1033, floors:[1,30]  },
+  { id:'02', block:1, type:'3BR',   typeLabel:'3BR Compact',   size:883,  floors:[5,30]  },
+  { id:'03', block:1, type:'3BRP',  typeLabel:'3BR Premium',   size:1033, floors:[5,31]  },
+  { id:'04', block:1, type:'1BS',   typeLabel:'1BR+Study',     size:484,  floors:[5,31]  },
+  { id:'05', block:1, type:'5BRPL', typeLabel:'5BR PL',        size:1582, floors:[5,30]  },
+  { id:'06', block:1, type:'2BR',   typeLabel:'2BR C',         size:592,  floors:[5,30]  },
+  { id:'07', block:1, type:'2BRP',  typeLabel:'2BR Premium D', size:678,  floors:[5,31]  },
+  { id:'08', block:1, type:'2BRP',  typeLabel:'2BR Premium A', size:689,  floors:[5,31]  },
+  { id:'09', block:1, type:'4BR',   typeLabel:'4BR A',         size:1173, floors:[1,31]  },
+  { id:'10', block:3, type:'4BRPL', typeLabel:'4BR PL',        size:1378, floors:[5,30]  },
+  { id:'11', block:3, type:'2BR',   typeLabel:'2BR A',         size:592,  floors:[1,30]  },
+  { id:'12', block:3, type:'3BR',   typeLabel:'3BR C',         size:883,  floors:[1,31]  },
+  { id:'13', block:3, type:'3BRP',  typeLabel:'3BR Premium C', size:1033, floors:[1,30]  },
+  { id:'14', block:3, type:'2BRP',  typeLabel:'2BR Premium C', size:678,  floors:[1,30]  },
+  { id:'15', block:3, type:'4BR',   typeLabel:'4BR B',         size:1173, floors:[1,31]  },
+  { id:'16', block:3, type:'2BRP',  typeLabel:'2BR Premium B', size:689,  floors:[3,30]  },
+  { id:'17', block:3, type:'2BR',   typeLabel:'2BR B',         size:592,  floors:[3,30]  },
+  { id:'18', block:3, type:'3BR',   typeLabel:'3BR B',         size:893,  floors:[1,30]  },
+];
+
+const TYPE_DEFS = [
+  { key:'1BS',   label:'1BR + Study',        size:'484 sqft' },
+  { key:'2BR',   label:'2-Bedroom',           size:'592 sqft' },
+  { key:'2BRP',  label:'2BR Premium',         size:'678–689 sqft' },
+  { key:'3BR',   label:'3-Bedroom',           size:'883–893 sqft' },
+  { key:'3BRP',  label:'3BR Premium',         size:'1,033 sqft' },
+  { key:'4BR',   label:'4-Bedroom',           size:'1,173 sqft' },
+  { key:'4BRPL', label:'4BR Private Lift',    size:'1,378 sqft' },
+  { key:'5BRPL', label:'5BR Private Lift',    size:'1,582 sqft' },
+  { key:'PH',    label:'Penthouse',           size:'1,765 sqft' },
+];
+
+// Unit mix % for auto interest estimate
+const TYPE_PCT = {
+  '1BS':5.24, '2BR':16.31, '2BRP':21.94, '3BR':16.89,
+  '3BRP':17.09, '4BR':12.04, '4BRPL':5.05, '5BRPL':5.05, 'PH':0.39
+};
+
+let interestMode = 'auto'; // 'auto' | 'manual'
+
+function unitsForStack(s) { return s.floors[1] - s.floors[0] + 1; }
+function stacksForType(t)  { return STACKS.filter(s => s.type === t); }
+function getSelectedTypes() {
+  return [...document.querySelectorAll('.type-chip.active')].map(el => el.dataset.type);
+}
+function getPnQueue() {
+  const pnCheque = +document.getElementById('pnCheque').value || 0;
+  const priority = +document.getElementById('priority').value || 0;
+  const bulk     = +document.getElementById('bulk').value || 0;
+  return Math.max(0, pnCheque - priority - bulk);
+}
+
+// ─── SYNC MARKET SHARE ────────────────────────────────────────────────────────
+function syncShare() {
+  const total = +document.getElementById('totalCheque').value || 1;
+  const pn    = +document.getElementById('pnCheque').value || 0;
+  const pct   = (pn / total * 100).toFixed(1);
+  document.getElementById('pnShare').value = pct;
+  document.getElementById('shareDisplay').textContent = pct + '%';
+  updateAutoInterest();
+}
+function syncCheque() {
+  const total = +document.getElementById('totalCheque').value || 1;
+  const pct   = +document.getElementById('pnShare').value || 0;
+  document.getElementById('pnCheque').value = Math.round(total * pct / 100);
+  document.getElementById('shareDisplay').textContent = parseFloat(pct).toFixed(1) + '%';
+  updateAutoInterest();
+}
+
+// ─── BUILD TYPE CHIPS ────────────────────────────────────────────────────────
+function buildTypeChips() {
+  const grid = document.getElementById('typeGrid');
+  grid.innerHTML = '';
+  TYPE_DEFS.forEach(t => {
+    const chip = document.createElement('div');
+    chip.className = 'type-chip';
+    chip.dataset.type = t.key;
+    chip.innerHTML = `
+      <span class="type-chip-label">${t.label}</span>
+      <span class="type-chip-size">${t.size}</span>`;
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+      renderStacks();
+      updateAutoInterest();
+    });
+    grid.appendChild(chip);
+  });
+}
+
+
+
+// ─── INTEREST MODE ────────────────────────────────────────────────────────────
+function setMode(mode) {
+  interestMode = mode;
+  document.getElementById('modeAutoBtn').classList.toggle('active',   mode === 'auto');
+  document.getElementById('modeManualBtn').classList.toggle('active', mode === 'manual');
+  document.getElementById('autoNote').classList.toggle('hidden',   mode !== 'auto');
+  document.getElementById('manualNote').classList.toggle('hidden',  mode !== 'manual');
+  document.getElementById('interestHeader').textContent =
+    mode === 'auto' ? 'PN Interest (auto)' : 'PN Interest (manual)';
+
+  document.querySelectorAll('.auto-val').forEach(el => el.style.display = mode === 'auto' ? 'block' : 'none');
+  document.querySelectorAll('.manual-val').forEach(el => el.style.display = mode === 'manual' ? 'block' : 'none');
+}
+
+// ─── RENDER STACK TABLE ───────────────────────────────────────────────────────
+function renderStacks() {
+  const selectedTypes = getSelectedTypes();
+  const tbody = document.getElementById('stackBody');
+  tbody.innerHTML = '';
+
+  if (!selectedTypes.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Select at least one bedroom type above</td></tr>';
+    return;
+  }
+
+  selectedTypes.forEach(type => {
+    const typeDef = TYPE_DEFS.find(t => t.key === type);
+    const stacks  = stacksForType(type);
+    if (!stacks.length) return;
+
+    // Group header row
+    const hdr = document.createElement('tr');
+    hdr.className = 'type-group-header';
+    hdr.innerHTML = `<td colspan="8">${typeDef.label} — ${typeDef.size}</td>`;
+    tbody.appendChild(hdr);
+
+    stacks.forEach(s => {
+      const units = unitsForStack(s);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="checkbox" class="stack-check" data-id="${s.id}" data-type="${s.type}" checked></td>
+        <td><span class="stack-badge">Stack ${s.id}</span></td>
+        <td style="color:var(--muted)">Block ${s.block}</td>
+        <td style="color:var(--muted)">${s.typeLabel}</td>
+        <td>${s.size.toLocaleString()}</td>
+        <td style="color:var(--muted)">${s.floors[0]}–${s.floors[1]}</td>
+        <td><strong>${units}</strong></td>
+        <td>
+          <span class="auto-val" data-id="${s.id}" style="display:${interestMode==='auto'?'block':'none'}">—</span>
+          <input type="number" class="interest-input manual-val" data-id="${s.id}"
+            min="0" placeholder="auto"
+            style="display:${interestMode==='manual'?'block':'none'}">
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
+  updateAutoInterest();
+}
+
+// ─── AUTO INTEREST CALCULATION ────────────────────────────────────────────────
+function updateAutoInterest() {
+  const pnQueue = getPnQueue();
+  const selectedTypes = getSelectedTypes();
+
+  selectedTypes.forEach(type => {
+    const pct        = TYPE_PCT[type] || 0;
+    const pnForType  = Math.round(pnQueue * pct / 100);
+    const stacks     = stacksForType(type);
+    const totalUnits = stacks.reduce((s, st) => s + unitsForStack(st), 0);
+
+    stacks.forEach(st => {
+      const val = totalUnits ? Math.round(pnForType * unitsForStack(st) / totalUnits) : 0;
+      const el  = document.querySelector(`.auto-val[data-id="${st.id}"]`);
+      if (el) el.textContent = val;
+    });
+  });
+}
+
+function getCheckedIds() {
+  return [...document.querySelectorAll('.stack-check:checked')].map(el => el.dataset.id);
+}
+
+// ─── VERDICT STYLE ────────────────────────────────────────────────────────────
+function verdictStyle(chance) {
+  if (chance >= 70) return { color:'#0891b2', label:'Very High', heroBg:'#ecfbff', vBg:'rgba(8,145,178,0.1)' };
+  if (chance >= 50) return { color:'#0ca678', label:'Likely',    heroBg:'#edfaf5', vBg:'rgba(12,166,120,0.1)' };
+  if (chance >= 30) return { color:'#e67700', label:'Moderate',  heroBg:'#fff8ec', vBg:'rgba(230,119,0,0.1)' };
+  if (chance > 0)   return { color:'#e03131', label:'Low',       heroBg:'#fff0f0', vBg:'rgba(224,49,49,0.1)' };
+  return                   { color:'#e03131', label:'Very Low',  heroBg:'#fff0f0', vBg:'rgba(224,49,49,0.1)' };
+}
+
+// ─── CALCULATE ────────────────────────────────────────────────────────────────
+function calculate() {
+  const totalCheque    = +document.getElementById('totalCheque').value || 0;
+  const pnCheque       = +document.getElementById('pnCheque').value || 0;
+  const priority       = +document.getElementById('priority').value || 0;
+  const bulk           = +document.getElementById('bulk').value || 0;
+  const pnQueue        = Math.max(0, pnCheque - priority - bulk);
+  const clientQ        = +document.getElementById('queueNo').value || 1;
+  const selectedTypes  = getSelectedTypes();
+  const checkedIds     = getCheckedIds();
+
+  if (!selectedTypes.length) { alert('Select at least one bedroom type.'); return; }
+  if (!checkedIds.length)    { alert('Select at least one stack.'); return; }
+
+  let totalUnits = 0, pnInterestSelected = 0;
+  const typeBreakdown = [];
+
+  selectedTypes.forEach(type => {
+    const pct        = TYPE_PCT[type] || 0;
+    const pnForType  = Math.round(pnQueue * pct / 100);
+    const allStacks  = stacksForType(type);
+    const totalU     = allStacks.reduce((s, st) => s + unitsForStack(st), 0);
+    const typeDef    = TYPE_DEFS.find(t => t.key === type);
+
+    let typeUnits = 0, typeInterest = 0;
+    allStacks.forEach(st => {
+      if (!checkedIds.includes(st.id)) return;
+      const u = unitsForStack(st);
+      typeUnits += u;
+
+      let interest;
+      if (interestMode === 'manual') {
+        const inp = document.querySelector(`.manual-val[data-id="${st.id}"]`);
+        const m   = inp ? +inp.value : 0;
+        interest  = m > 0 ? m : (totalU ? Math.round(pnForType * u / totalU) : 0);
+      } else {
+        interest = totalU ? Math.round(pnForType * u / totalU) : 0;
+      }
+      typeInterest += interest;
+    });
+
+    if (typeUnits > 0) {
+      totalUnits         += typeUnits;
+      pnInterestSelected += typeInterest;
+      typeBreakdown.push({ label: typeDef.label, units: typeUnits, interest: typeInterest, pct });
+    }
+  });
+
+  if (!totalUnits) { alert('No units found for selected stacks.'); return; }
+
+  const competitorsBefore = Math.round(Math.max(0, clientQ - 1) * pnInterestSelected / Math.max(pnQueue, 1));
+  const unitsConsumed     = Math.min(competitorsBefore, totalUnits);
+  const unitsLeft         = Math.max(0, totalUnits - unitsConsumed);
+  const chance            = Math.min(100, (unitsLeft / totalUnits) * 100);
+  const vs                = verdictStyle(chance);
+
+  // Hero
+  const hero = document.getElementById('resultHero');
+  hero.style.background  = vs.heroBg;
+  hero.style.borderColor = vs.color + '44';
+  const pctEl = document.getElementById('resultPct');
+  pctEl.textContent = chance.toFixed(1) + '%';
+  pctEl.style.color = vs.color;
+  const vEl = document.getElementById('resultVerdict');
+  vEl.textContent = vs.label;
+  vEl.style.background = vs.vBg;
+  vEl.style.color = vs.color;
+
+  document.getElementById('statPNQueue').textContent   = pnQueue.toLocaleString();
+  document.getElementById('statBefore').textContent    = competitorsBefore.toLocaleString();
+  document.getElementById('statUnitsLeft').textContent = unitsLeft + ' / ' + totalUnits;
+
+  // Breakdown
+  let bdHtml = `
+    <li><span>Total Cheques</span><span>${totalCheque.toLocaleString()}</span></li>
+    <li><span>PN Cheques</span><span>${pnCheque.toLocaleString()} (${(pnCheque/totalCheque*100).toFixed(1)}%)</span></li>
+    <li><span>PN Queue (after Priority + Bulk/Developer)</span><span>${pnQueue.toLocaleString()}</span></li>`;
+
+  typeBreakdown.forEach(t => {
+    bdHtml += `<li><span style="padding-left:0">↳ ${t.label} — ${t.pct.toFixed(2)}% of PN</span><span>${t.interest} PN buyers · ${t.units} units</span></li>`;
+  });
+
+  bdHtml += `
+    <li><span>Combined PN interest (selected stacks)</span><span>${pnInterestSelected.toLocaleString()}</span></li>
+    <li><span>Client queue #</span><span>${clientQ}</span></li>
+    <li><span>Competitors before client</span><span>${competitorsBefore.toLocaleString()}</span></li>
+    <li><span>Total units in selected stacks</span><span>${totalUnits}</span></li>
+    <li><span>Est. units consumed before client</span><span>${unitsConsumed}</span></li>
+    <li><span>Est. units remaining</span><span>${unitsLeft}</span></li>`;
+
+  document.getElementById('breakdownList').innerHTML = bdHtml;
+  buildSensitivity(pnQueue, pnInterestSelected, totalUnits, clientQ);
+  document.getElementById('resultsSection').classList.remove('hidden');
+  document.getElementById('sensSection').classList.remove('hidden');
+  document.getElementById('resultsSection').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ─── SENSITIVITY ─────────────────────────────────────────────────────────────
+function buildSensitivity(pnQueue, pnInterest, totalUnits, clientQ) {
+  const tbody = document.getElementById('sensBody');
+  tbody.innerHTML = '';
+  const step  = 50;
+  const start = Math.max(1, Math.floor(Math.max(1, clientQ - 200) / step) * step);
+  const end   = clientQ + 200;
+
+  for (let q = start; q <= end; q += step) {
+    const compBefore = Math.round(Math.max(0, q - 1) * pnInterest / Math.max(pnQueue, 1));
+    const left       = Math.max(0, totalUnits - Math.min(compBefore, totalUnits));
+    const chance     = totalUnits > 0 ? Math.min(100, (left / totalUnits) * 100) : 0;
+    const vs         = verdictStyle(chance);
+    const isClient   = q === clientQ;
+    const tr         = document.createElement('tr');
+    if (isClient) tr.classList.add('highlight');
+    tr.innerHTML = `
+      <td style="color:${isClient?'var(--accent)':'var(--text)'};font-weight:${isClient?600:400}">
+        ${q}${isClient?' <span style="font-size:9px;opacity:0.65"> ← your client</span>':''}
+      </td>
+      <td style="color:var(--muted)">${compBefore}</td>
+      <td>${left} <span style="color:var(--muted)">/ ${totalUnits}</span></td>
+      <td style="color:${vs.color};font-weight:600">${chance.toFixed(1)}%</td>
+      <td>
+        <div class="prob-bar-wrap">
+          <div class="prob-bar" style="width:${Math.max(2,chance).toFixed(0)}px;background:${vs.color};opacity:0.65"></div>
+          <span style="color:${vs.color};font-size:10px">${vs.label}</span>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('totalCheque').addEventListener('input', () => { syncShare(); });
+document.getElementById('pnCheque').addEventListener('input',   () => { syncShare(); });
+document.getElementById('pnShare').addEventListener('input',    () => { syncCheque(); });
+document.getElementById('priority').addEventListener('input', () => updateAutoInterest());
+document.getElementById('bulk').addEventListener('input',     () => updateAutoInterest());
+
+syncCheque();
+buildTypeChips();
+</script>
+</body>
+</html>
