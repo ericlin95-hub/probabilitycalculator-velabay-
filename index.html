@@ -159,8 +159,8 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
     </div>
     <div class="divider"></div>
     <div class="ir">
-      <div class="ig"><label>Priority / VIP</label><input type="number" id="priority" value="0" min="0"></div>
-      <div class="ig"><label>Bulk / Developer</label><input type="number" id="bulk" value="0" min="0"></div>
+      <div class="ig"><label>Priority / VIP</label><input type="number" id="priority" value="50" min="0"></div>
+      <div class="ig"><label>Bulk / Developer</label><input type="number" id="bulk" value="20" min="0"></div>
     </div>
     <div class="note">PN Queue = PN Cheques − Priority / VIP − Bulk / Developer</div>
   </div>
@@ -579,7 +579,7 @@ function calculate(){
   // Build plain-English story
   const stackNames = ids.map(id=>'Stack '+id).join(', ');
   const typeNames  = bd.map(t=>t.n).join(' + ');
-  const pnSharePct = (pnQ/Math.max(totalCheque,1)*100).toFixed(1);
+  const pnSharePct = (pnCheque/Math.max(totalCheque,1)*100).toFixed(1); // raw PN share, matching top display
   const totalMktIntDisplay = Math.round(totalMktInterest);
   const rawCompDisplay = Math.round(rawComp);
 
