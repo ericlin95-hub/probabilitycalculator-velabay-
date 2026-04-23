@@ -165,7 +165,7 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59
         <input type="number" id="bulk" value="17" min="0" oninput="refreshAutoVals()">
       </div>
       <div class="ig">
-        <label>Agent Purchases <span style="font-size:9px;color:var(--muted)">(PN agents buying, all floors)</span></label>
+        <label>Agent Purchases <span style="font-size:9px;color:var(--muted)">(PN agents buying, floor 11+ only)</span></label>
         <input type="number" id="agentPurchase" value="50" min="0" oninput="refreshAutoVals()">
       </div>
     </div>
@@ -329,23 +329,24 @@ function getPNQ(){
   return Math.max(0,+document.getElementById('pnCheque').value||0);
 }
 // calcPreQueue: scopes bulk/agent to selected stacks using heatmap interest rate.
-// marketInterestRate = (pnInt / pnShare) / totalCheque
-//   = proportion of ALL buyers (all agencies) interested in selected stacks.
-// We use this same rate to estimate how many bulk/agent buyers want the same stacks.
-function calcPreQueue(marketInterestRate){
-  const rate      = marketInterestRate || 1; // fallback = all units if no selection yet
+// marketInterestRate  = fraction of ALL buyers interested in selected stacks (all floors)
+// agentInterestRate   = same but only counting units on floor 11+ (agent restriction)
+function calcPreQueue(marketInterestRate, agentInterestRate){
+  const rate      = marketInterestRate || 1;
+  const agentRate = (agentInterestRate !== undefined) ? agentInterestRate : rate;
   const bulkRaw   = +document.getElementById('bulk').value||0;
   const agentRaw  = +document.getElementById('agentPurchase').value||0;
-  // How many of each group are estimated to want the selected stacks?
+  // Bulk: no floor restriction — use full market interest rate
   const bulkForStack  = bulkRaw  * rate;
-  const agentForStack = agentRaw * rate;
+  // Agents: floor 11+ only — use floor-11+ scoped interest rate
+  const agentForStack = agentRaw * agentRate;
   // Apply 5% dropout (same as Tengah)
   const bulkEff   = Math.round(bulkForStack  * 0.95);
   const agentEff  = Math.round(agentForStack * 0.95);
   return {
     bulkRaw, bulkForStack: bulkForStack.toFixed(1), bulkEff,
     agentRaw, agentForStack: agentForStack.toFixed(1), agentEff,
-    rate, total: bulkEff + agentEff
+    agentRate, rate, total: bulkEff + agentEff
   };
 }
 function verdict(p){
@@ -595,8 +596,32 @@ function calculate(){
   const totalMktInterest = pnInt / Math.max(pnShareCalc, 0.01);
   const marketInterestRate = totalMktInterest / totalCheque;
 
-  // NOW compute pre-queue with the scoped interest rate
-  const pq             = calcPreQueue(marketInterestRate);
+  // Agent interest rate: same logic but only units on floor 11+ count
+  // For each selected stack, only floors >= 11 contribute to the pni weight
+  let pnIntAgent = 0;
+  ids.forEach(id => {
+    const s = STACKS.find(x => x.id === id);
+    if (!s) return;
+    const totalStkFloors = s.fl[1] - s.fl[0] + 1;
+    // Units on floor 11+ within client floor range
+    const minEl = document.querySelector(`.fl-min[data-id="${s.id}"]`);
+    const maxEl = document.querySelector(`.fl-max[data-id="${s.id}"]`);
+    const clientMin = minEl ? (+minEl.value || s.fl[0]) : s.fl[0];
+    const clientMax = maxEl ? (+maxEl.value || s.fl[1]) : s.fl[1];
+    const agentMin  = Math.max(clientMin, 11); // agents restricted to floor 11+
+    const agentMax  = clientMax;
+    const agentUnits = agentMin <= agentMax && agentMax <= s.fl[1]
+      ? Math.max(0, Math.min(agentMax, s.fl[1]) - Math.max(agentMin, s.fl[0]) + 1)
+      : 0;
+    // Scale pni proportionally to floor-11+ units vs full stack
+    const scaledAgent = totalStkFloors > 0 ? s.pni * agentUnits / totalStkFloors : 0;
+    pnIntAgent += scaledAgent;
+  });
+  const totalMktInterestAgent = pnIntAgent / Math.max(pnShareCalc, 0.01);
+  const agentInterestRate     = totalMktInterestAgent / totalCheque;
+
+  // NOW compute pre-queue with both rates
+  const pq             = calcPreQueue(marketInterestRate, agentInterestRate);
   const preQueueUnits  = pq.total;
 
   const qAhead  =Math.max(0,clientQ-1);
@@ -651,9 +676,9 @@ function calculate(){
              val: '-'+bulkConsumed,
              sub: pq.bulkRaw+' market-wide \u2192 ~'+pq.bulkForStack+' targeting these stacks \u2192 '+pq.bulkEff+' buy',
              hide: pq.bulkRaw===0 },
-    { label: '\u2212 Stage 2: Agents ('+pq.agentRaw+' total \u00d7 '+(pq.rate*100).toFixed(1)+'% stack interest \u00d7 95%)',
+    { label: '\u2212 Stage 2: Agents ('+pq.agentRaw+' total \u00d7 '+(pq.agentRate*100).toFixed(1)+'% fl11+ interest \u00d7 95%)',
              val: '-'+agentConsumed,
-             sub: pq.agentRaw+' market-wide \u2192 ~'+pq.agentForStack+' targeting these stacks \u2192 '+pq.agentEff+' buy',
+             sub: pq.agentRaw+' market-wide (fl11+ only) \u2192 ~'+pq.agentForStack+' targeting these stacks \u2192 '+pq.agentEff+' buy',
              hide: pq.agentRaw===0 },
     { label: '= Units remaining for public queue',
              val: unitsAfterPreQ, divider: true },
