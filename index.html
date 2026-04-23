@@ -627,14 +627,22 @@ function calculate(){
   const pnSharePct      = (pnCheque/Math.max(totalCheque,1)*100).toFixed(1);
   const totalMktIntDisplay = Math.round(totalMktInterest);
 
-  // Dropout: how many total buyers survive after dropout
+  // Dropout: how many total buyers survive after dropout, with per-band working
   let effAllBuyersRaw=0;
+  let dropoutBandLines='';
   bands.forEach(b=>{
     const s=Math.max(b.from,1),e=Math.min(b.to,qAhead);
     if(e<s)return;
-    effAllBuyersRaw+=(e-s+1)*(1-b.pct/100);
+    const count=e-s+1;
+    const kept=Math.round(count*(1-b.pct/100));
+    effAllBuyersRaw+=kept;
+    dropoutBandLines+='Q'+s+'\u2013Q'+e+': '+count+' buyers, '+b.pct+'% drop out \u2192 '+kept+' stay | ';
   });
+  // Remove trailing separator
+  dropoutBandLines=dropoutBandLines.replace(/\s\|\s$/, '');
   const effAllBuyersDisplay=Math.round(effAllBuyersRaw);
+  // Of those who show up, apply stack interest rate to get actual competitors
+  const stackInterestPct=(marketInterestRate*100).toFixed(1);
 
   const rows = [
     { label: 'Total units in selected stacks',
@@ -657,7 +665,8 @@ function calculate(){
              val: qAhead },
     { label: 'Effective competing buyers (after dropout)',
              val: effComp,
-             sub: qAhead+' ahead \u2192 '+effAllBuyersDisplay+' show up \u2192 '+effComp+' want same stacks' },
+             sub: dropoutBandLines+'\n'
+               +effAllBuyersDisplay+' show up \u00d7 '+stackInterestPct+'% stack interest = '+effComp+' competing for same stacks' },
     { label: '\u2212 Units consumed by public queue buyers ahead',
              val: '-'+publicConsumed },
     { label: '= Units remaining when your client turns comes',
@@ -670,7 +679,7 @@ function calculate(){
       <tr style="${r.divider?'border-top:1.5px solid var(--border)':''}">
         <td style="color:${r.highlight?r.color:'var(--muted)'};${r.highlight?'font-weight:600':''}">
           ${r.label}
-          ${r.sub?`<span style="display:block;font-size:9px;color:var(--muted);margin-top:2px">${r.sub}</span>`:''}
+          ${r.sub?`<span style="display:block;font-size:9px;color:var(--muted);margin-top:2px;line-height:1.7">${r.sub.replace(/\n/g,'<br>')}</span>`:''}
         </td>
         <td style="text-align:right;font-weight:600;color:${r.highlight?r.color:(String(r.val).startsWith('-')?'#e03131':'var(--text)')};white-space:nowrap">
           ${r.val}
